@@ -1,0 +1,85 @@
+plugins {
+    java
+    id("org.springframework.boot") version "3.4.3"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "com.instagram"
+version = "0.0.1-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly { extendsFrom(configurations.annotationProcessor.get()) }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+
+    // JWT 0.12.x
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // QueryDSL 5.1 (Jakarta)
+    implementation("com.querydsl:querydsl-jpa:5.1.0:jakarta")
+    annotationProcessor("com.querydsl:querydsl-apt:5.1.0:jakarta")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+
+    // SpringDoc OpenAPI (Springfox 대체)
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
+
+    // Spring Cloud AWS 3.x (S3)
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-s3:3.2.1")
+
+    // Prometheus 메트릭
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+    // Caffeine 캐시 (L1)
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
+    // Database
+    runtimeOnly("com.mysql:mysql-connector-j")
+
+    // Lombok
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
+    // Test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:mysql:1.20.4")
+    testImplementation("org.testcontainers:junit-jupiter:1.20.4")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+// QueryDSL Q클래스 생성 경로
+val querydslDir = "src/main/generated"
+sourceSets["main"].java.srcDirs(querydslDir)
+tasks.withType<JavaCompile> {
+    options.generatedSourceOutputDirectory = file(querydslDir)
+}
+tasks.named("clean") {
+    doLast { file(querydslDir).deleteRecursively() }
+}

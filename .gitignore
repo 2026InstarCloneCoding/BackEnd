@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+src/main/generated/
+
+# IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Environment
+.env
+.env.local
+.env.prod
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# OMC (Claude Code 도구 상태 파일)
+.omc/
