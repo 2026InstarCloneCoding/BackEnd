@@ -1,0 +1,67 @@
+src:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**'
+
+domain/member:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/member/**'
+
+domain/post:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/post/**'
+
+domain/feed:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/feed/**'
+
+domain/auth:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/auth/**'
+
+domain/follow:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/follow/**'
+
+domain/story:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/story/**'
+
+domain/dm:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/dm/**'
+
+domain/search:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/search/**'
+
+domain/notification:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/notification/**'
+
+config:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/config/**'
+    - any-glob-to-any-file: 'src/**/global/**'
+
+test:
+  - changed-files:
+    - any-glob-to-any-file: 'src/test/**'
+
+docker:
+  - changed-files:
+    - any-glob-to-any-file: 'docker/**'
+    - any-glob-to-any-file: 'Dockerfile'
+    - any-glob-to-any-file: 'docker-compose*.yml'
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
+    - any-glob-to-any-file: '.github/labeler.yml'
+
+gradle:
+  - changed-files:
+    - any-glob-to-any-file: 'build.gradle.kts'
+    - any-glob-to-any-file: 'settings.gradle.kts'
+    - any-glob-to-any-file: 'gradle/**'
+    - any-glob-to-any-file: 'gradlew'
+    - any-glob-to-any-file: 'gradle.properties'
