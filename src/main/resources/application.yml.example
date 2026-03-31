@@ -14,7 +14,7 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: localhost
       port: 6379
 
   cloud:
@@ -22,13 +22,13 @@ spring:
       region:
         static: ap-northeast-2
       credentials:
-        access-key: ${AWS_ACCESS_KEY:local}
-        secret-key: ${AWS_SECRET_KEY:local}
+        access-key: your-aws-access-key
+        secret-key: your-aws-secret-key
       s3:
-        bucket: ${AWS_S3_BUCKET:local-bucket}
+        bucket: your-s3-bucket-name
 
 jwt:
-  secret: ${JWT_SECRET:local-dev-secret-key-minimum-256-bits-long-enough}
+  secret: your-256-bit-secret-key-must-be-at-least-32-characters
   access-expiration: 3600000      # 1시간
   refresh-expiration: 604800000   # 7일
 
@@ -44,9 +44,4 @@ management:
       enabled: true
   health:
     mail:
-      enabled: false   # 로컬에서 Gmail 인증 없이 실행 시 비활성화
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-  default-consumes-media-type: application/json
+      enabled: false
