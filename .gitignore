@@ -5,6 +5,7 @@ src/main/generated/
 
 # IntelliJ
 .idea/
+.run/
 *.iws
 *.iml
 *.ipr
