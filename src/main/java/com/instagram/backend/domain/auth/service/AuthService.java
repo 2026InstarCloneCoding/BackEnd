@@ -49,7 +49,7 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         Member member = memberRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
@@ -77,10 +77,14 @@ public class AuthService {
                 .build();
     }
 
-    public RefreshResponse refresh(RefreshRequest request) {
-        jwtTokenProvider.validateToken(request.getRefreshToken());
+    public RefreshResponse refresh(String refreshTokenStr) {
+        jwtTokenProvider.validateToken(refreshTokenStr);
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(request.getRefreshToken())
+        if (!"refresh".equals(jwtTokenProvider.getTypeFromToken(refreshTokenStr))) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN));
 
         if (refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -88,7 +92,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         }
 
-        Long memberId = jwtTokenProvider.getMemberIdFromToken(request.getRefreshToken());
+        Long memberId = jwtTokenProvider.getMemberIdFromToken(refreshTokenStr);
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
