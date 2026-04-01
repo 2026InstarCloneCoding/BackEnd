@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new CustomUserDetails(
                 member.getMemberId(),
                 member.getEmail(),
-                member.getPassword(),
+                member.getMemberPassword(),
                 member.getRole()
         );
     }

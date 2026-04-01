@@ -20,11 +20,11 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         if (!memberRepository.existsByEmail("root@instagram.com")) {
             memberRepository.save(Member.builder()
-                    .userId(1L)
+                    .userId("1")
                     .email("root@instagram.com")
-                    .password(passwordEncoder.encode("root1234"))
-                    .username("root")
-                    .name("Root")
+                    .memberPassword(passwordEncoder.encode("root1234"))
+                    .memberUsername("root")
+                    .memberName("Root")
                     .build());
             System.out.println("[DataInitializer] Root 계정 생성 완료: root@instagram.com / root1234");
         }
