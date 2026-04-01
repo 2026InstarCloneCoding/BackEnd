@@ -8,5 +8,5 @@ import lombok.Getter;
 public class SignupResponse {
 
     private Long memberId;
-    private String memberUsername;
+    private String username;
 }
