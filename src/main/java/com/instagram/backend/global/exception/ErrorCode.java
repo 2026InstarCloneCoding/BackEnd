@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 public enum ErrorCode {
 
     // 400 - 잘못된 요청
+    EXCEED_IMAGE_LIMIT(400, "이미지는 최대 10개까지 첨부 가능합니다."),
+    EXCEED_CONTENT_LENGTH(400, "게시물 내용은 2200자 이내로 입력해주세요."),
+    INVALID_TAG_USERNAME(400, "태그한 사용자를 찾을 수 없습니다."),
+    INVALID_LIMIT(400, "limit 값이 올바르지 않습니다. (1~30)"),
     INVALID_EMAIL_FORMAT(400, "이메일 형식이 올바르지 않습니다."),
     INVALID_PASSWORD_FORMAT(400, "비밀번호는 8자 이상이어야 합니다."),
     INVALID_USERNAME_FORMAT(400, "유저네임은 영문, 숫자, _만 사용 가능합니다."),
@@ -24,9 +28,12 @@ public enum ErrorCode {
 
     // 403 - 권한 오류
     AUTH_ACCESS_DENIED(403, "접근 권한이 없습니다."),
+    FORBIDDEN(403, "본인의 게시물만 수정/삭제할 수 있습니다."),
 
     // 404 - 리소스 없음
     MEMBER_NOT_FOUND(404, "존재하지 않는 계정입니다."),
+    POST_NOT_FOUND(404, "존재하지 않는 게시물입니다."),
+
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
