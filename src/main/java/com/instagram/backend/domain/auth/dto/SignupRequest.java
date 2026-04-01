@@ -19,12 +19,12 @@ public class SignupRequest {
 
     @NotBlank(message = "비밀번호를 입력해주세요.")
     @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
-    private String memberPassword;
+    private String password;
 
     @NotBlank(message = "유저네임을 입력해주세요.")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "유저네임은 영문, 숫자, _만 사용 가능합니다.")
-    private String memberUsername;
+    private String username;
 
     @NotBlank(message = "이름을 입력해주세요.")
-    private String memberName;
+    private String name;
 }

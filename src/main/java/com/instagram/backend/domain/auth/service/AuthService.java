@@ -29,21 +29,21 @@ public class AuthService {
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
-        if (memberRepository.existsByMemberUsername(request.getMemberUsername())) {
+        if (memberRepository.existsByUsername(request.getUsername())) {
             throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
         }
 
         Member member = Member.builder()
                 .email(request.getEmail())
-                .memberPassword(passwordEncoder.encode(request.getMemberPassword()))
-                .memberUsername(request.getMemberUsername())
-                .memberName(request.getMemberName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .username(request.getUsername())
+                .name(request.getName())
                 .build();
         memberRepository.save(member);
 
         return SignupResponse.builder()
-                .memberId(member.getId())
-                .memberUsername(member.getMemberUsername())
+                .memberId(member.getMemberId())
+                .username(member.getUsername())
                 .build();
     }
 
@@ -51,17 +51,16 @@ public class AuthService {
         Member member = memberRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        if (!passwordEncoder.matches(request.getMemberPassword(), member.getMemberPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(member.getMemberId(), member.getRole());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(member.getMemberId());
 
-        // 기존 Refresh Token 삭제 후 새로 저장 (중복 로그인 처리)
-        refreshTokenRepository.deleteByMemberId(member.getId());
+        refreshTokenRepository.deleteByMemberId(member.getMemberId());
         refreshTokenRepository.save(RefreshToken.builder()
-                .memberId(member.getId())
+                .memberId(member.getMemberId())
                 .token(refreshToken)
                 .expiresAt(LocalDateTime.now().plusSeconds(jwtTokenProvider.getRefreshExpiration() / 1000))
                 .build());
@@ -71,9 +70,9 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .expiresIn(jwtTokenProvider.getAccessExpiration() / 1000)
                 .member(LoginResponse.MemberInfo.builder()
-                        .memberId(member.getId())
-                        .memberUsername(member.getMemberUsername())
-                        .memberImageUrl(null) // 추후 Member 엔티티에 memberImageUrl 추가 시 연동
+                        .memberId(member.getMemberId())
+                        .username(member.getUsername())
+                        .imageUrl(member.getImageUrl())
                         .build())
                 .build();
     }
