@@ -69,7 +69,7 @@ public class MemberService {
       — 내가 이 유저를 팔로우하고 있는지 확인
     */
     public UserProfileResponse getUserProfile(Long myMemberId, String username) {
-        Member member = memberRepository.findByUsernameAndIsDeletedFalse(username)
+        Member member = memberRepository.findByMemberUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         long postCount = 0; // TODO: postRepository.countByMemberIdAndIsDeletedFalse(member.getMemberId())
