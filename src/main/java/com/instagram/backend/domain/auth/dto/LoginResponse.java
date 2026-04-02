@@ -1,5 +1,6 @@
 package com.instagram.backend.domain.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,6 +9,7 @@ import lombok.Getter;
 public class LoginResponse {
 
     private String accessToken;
+    @JsonIgnore
     private String refreshToken;
     private long expiresIn;
     private MemberInfo member;

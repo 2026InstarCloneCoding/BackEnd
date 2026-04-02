@@ -1,6 +1,7 @@
 package com.instagram.backend.global.security.jwt;
 
 import com.instagram.backend.global.exception.BusinessException;
+import com.instagram.backend.global.exception.ErrorCode;
 import com.instagram.backend.global.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,6 +30,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 jwtTokenProvider.validateToken(token);
+
+                if (!"access".equals(jwtTokenProvider.getTypeFromToken(token))) {
+                    throw new BusinessException(ErrorCode.INVALID_TOKEN);
+                }
 
                 Long memberId = jwtTokenProvider.getMemberIdFromToken(token);
                 String role = jwtTokenProvider.getRoleFromToken(token);
