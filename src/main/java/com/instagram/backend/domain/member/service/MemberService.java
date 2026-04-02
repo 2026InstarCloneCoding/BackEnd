@@ -2,7 +2,7 @@ package com.instagram.backend.domain.member.service;
 
 import com.instagram.backend.domain.follow.repository.FollowRepository;
 import com.instagram.backend.domain.member.dto.*;
-import com.instagram.backend.domain.member.entity.Gender;
+import com.instagram.backend.domain.member.enums.Gender;
 import com.instagram.backend.domain.member.entity.Member;
 import com.instagram.backend.domain.member.repository.MemberRepository;
 import com.instagram.backend.global.exception.BusinessException;
