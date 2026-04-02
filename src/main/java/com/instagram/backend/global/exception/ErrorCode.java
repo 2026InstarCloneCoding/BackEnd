@@ -17,7 +17,7 @@ public enum ErrorCode {
     INVALID_USERNAME_FORMAT(400, "유저네임은 영문, 숫자, _만 사용 가능합니다."),
     MISSING_REQUIRED_FIELD(400, "필수 항목을 모두 입력해주세요."),
     INVALID_BIO_LENGTH(400, "소개글은 160자 이내로 입력해주세요."),
-    INVALID_GENDER_VALUE(400, "성별 값이 올바르지 않습니다. (M/F/N)"),
+    INVALID_GENDER_VALUE(400, "성별 값이 올바르지 않습니다. (MALE/FEMALE/OTHER)"),
     INVALID_IMAGE_TYPE(400, "지원하지 않는 이미지 형식입니다."),
 
     // 401 - 인증 오류

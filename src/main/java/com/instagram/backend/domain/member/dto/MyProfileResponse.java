@@ -1,6 +1,6 @@
 package com.instagram.backend.domain.member.dto;
 
-import com.instagram.backend.domain.member.entity.Gender;
+import com.instagram.backend.domain.member.enums.Gender;
 import com.instagram.backend.domain.member.entity.Member;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,5 +1,6 @@
 package com.instagram.backend.domain.member.entity;
 
+import com.instagram.backend.domain.member.enums.Gender;
 import com.instagram.backend.global.entity.BaseSoftDeleteEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
