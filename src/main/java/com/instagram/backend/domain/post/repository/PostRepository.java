@@ -10,4 +10,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {//<다룰 앤
     //Optional : Null 값 안전하게 처리
     //findByIdAndIsDeletedFalse : ID로 찾고 IsDeleted가 false 것만
     // Spring Data JPA는 메서드 이름만 규칙에 맞게 영어 문장처럼 지어주면, 알아서 DB가 이해할 수 있는 SQL 쿼리로 번역
+
+    // SELECT COUNT(*) FROM posts WHERE member_id = ? AND is_deleted = false
+    // → 특정 유저의 삭제되지 않은 게시물 수 (프로필의 "게시물 N" 표시용)
+    long countByMemberMemberIdAndIsDeletedFalse(Long memberId);
 }

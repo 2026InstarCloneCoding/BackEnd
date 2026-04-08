@@ -1,6 +1,7 @@
 package com.instagram.backend.domain.member.service;
 
 import com.instagram.backend.domain.follow.repository.FollowRepository;
+import com.instagram.backend.domain.post.repository.PostRepository;
 import com.instagram.backend.domain.member.dto.*;
 import com.instagram.backend.domain.member.dto.ProfileImageUpdateRequest;
 import com.instagram.backend.domain.member.dto.ProfileImageUpdateResponse;
@@ -33,15 +34,16 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final FollowRepository followRepository;
+    private final PostRepository postRepository;
 
     /*
       내 프로필 조회
       — JWT에서 추출한 memberId로 Member 조회
-      — postCount는 아직 Post 엔티티가 없으므로 0으로 반환 (TODO: Post 개발 후 연동)
+      — postCount: PostRepository에서 삭제되지 않은 게시물 수를 직접 조회
     */
     public MyProfileResponse getMyProfile(Long memberId) {
         Member member = findMemberById(memberId);
-        long postCount = 0; // TODO: postRepository.countByMemberIdAndIsDeletedFalse(memberId)
+        long postCount = postRepository.countByMemberMemberIdAndIsDeletedFalse(memberId);
         return MyProfileResponse.from(member, postCount);
     }
 
@@ -74,7 +76,7 @@ public class MemberService {
         Member member = memberRepository.findByMemberUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        long postCount = 0; // TODO: postRepository.countByMemberIdAndIsDeletedFalse(member.getMemberId())
+        long postCount = postRepository.countByMemberMemberIdAndIsDeletedFalse(member.getMemberId());
         boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(myMemberId, member.getMemberId());
 
         return UserProfileResponse.from(member, postCount, isFollowing);
