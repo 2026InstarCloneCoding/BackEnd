@@ -37,5 +37,6 @@ public class BookmarkService {
 
         Bookmark bookmark = bookmarkRepository.findByPostIdAndMemberId(postId, memberId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.BOOKMARK_NOT_FOUND));
+        bookmarkRepository.delete(bookmark); // 저장 취소
     }
 }
