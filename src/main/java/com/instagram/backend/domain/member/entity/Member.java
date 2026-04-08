@@ -93,4 +93,15 @@ public class Member extends BaseSoftDeleteEntity {
         this.imageName = imageName;
         this.imageUuid = imageUuid;
     }
+
+    /*
+      팔로워/팔로잉 카운트 증감 메서드
+      — 팔로우/언팔로우 시 실시간으로 카운트를 변경
+      — 매번 COUNT 쿼리를 날리지 않고 숫자만 +1/-1 하므로 성능이 좋음 (비정규화)
+      — 0 미만으로 내려가지 않도록 방어 코드 추가
+    */
+    public void incrementFollowerCount() { this.followerCount++; }
+    public void decrementFollowerCount() { if (this.followerCount > 0) this.followerCount--; }
+    public void incrementFollowingCount() { this.followingCount++; }
+    public void decrementFollowingCount() { if (this.followingCount > 0) this.followingCount--; }
 }

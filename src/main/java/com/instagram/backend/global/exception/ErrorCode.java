@@ -30,18 +30,21 @@ public enum ErrorCode {
     AUTH_ACCESS_DENIED(403, "접근 권한이 없습니다."),
     FORBIDDEN(403, "본인의 게시물만 수정/삭제할 수 있습니다."),
 
+    CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
+
     // 404 - 리소스 없음
     MEMBER_NOT_FOUND(404, "존재하지 않는 계정입니다."),
     POST_NOT_FOUND(404, "존재하지 않는 게시물입니다."),
     LIKE_NOT_FOUND(404, "좋아요 내역이 존재하지 않습니다."),
     BOOKMARK_NOT_FOUND(404, "저장 내역이 존재하지 않습니다."),
-
+    FOLLOW_NOT_FOUND(404, "팔로우 관계가 존재하지 않습니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
     DUPLICATE_USERNAME(409, "이미 사용 중인 유저네임입니다."),
     ALREADY_LIKED(409, "이미 좋아요한 게시물입니다."),
     ALREADY_BOOKMARKED(409, "이미 저장한 게시물입니다."),
+    ALREADY_FOLLOWING(409, "이미 팔로우한 사용자입니다."),
 
     // 500 - 서버 오류
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
