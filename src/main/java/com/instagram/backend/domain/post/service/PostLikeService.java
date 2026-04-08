@@ -1,0 +1,51 @@
+package com.instagram.backend.domain.post.service;
+
+import com.instagram.backend.domain.post.entity.Post;
+import com.instagram.backend.domain.post.entity.PostLike;
+import com.instagram.backend.domain.post.repository.PostLikeRepository;
+import com.instagram.backend.domain.post.repository.PostRepository;
+import com.instagram.backend.global.exception.BusinessException;
+import com.instagram.backend.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)// 나중에 조회 기능이 올 수 있어서 미리 깔아 놓기(실무에서 정석으로 사용)
+public class PostLikeService {
+
+    private final PostRepository postRepository;
+    private final PostLikeRepository postLikeRepository;
+
+    //좋아요 up
+    @Transactional
+    public void likePost(Long memberId, Long postId) {
+        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));//삭제안된 게시물
+        if (postLikeRepository.existsByPostIdAndMemberId(postId, memberId)) {
+            throw new BusinessException(ErrorCode.ALREADY_LIKED);
+        }
+
+        postLikeRepository.save(PostLike.builder()
+                .postId(postId)
+                .memberId((memberId))
+                .build()); // 좋아요 기록 저장
+
+        post.increaseLikeCount();//게시물의 좋아요 카운트 up
+    }
+
+    //좋아요 캔슬
+    @Transactional
+    public void unlikePost(Long memberId, Long postId){
+        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));//존재하는 게시물인지 체크
+
+        PostLike postLike = postLikeRepository.findByPostIdAndMemberId(postId,memberId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.LIKE_NOT_FOUND));//게시물에 좋아요 있는지 췤
+
+        postLikeRepository.delete(postLike);//좋아요 삭제
+
+        post.decreaseLikeCount();//게시물의 좋아요 카운트 down
+    }
+}
