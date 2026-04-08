@@ -1,7 +1,9 @@
 package com.instagram.backend.domain.follow.controller;
 
+import com.instagram.backend.domain.follow.dto.FollowListResponse;
 import com.instagram.backend.domain.follow.service.FollowService;
 import com.instagram.backend.global.dto.ApiResponse;
+import com.instagram.backend.global.dto.CursorPageResponse;
 import com.instagram.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,5 +61,44 @@ public class FollowController {
             @PathVariable Long memberId) {
         followService.unfollow(userDetails.getMemberId(), memberId);
         return ApiResponse.success(null, "언팔로우에 성공하였습니다.");
+    }
+
+    /*
+      GET /api/users/{username}/followers — 팔로워 목록 조회
+
+      @RequestParam — URL의 쿼리 파라미터를 받음
+        — 예: GET /api/users/john/followers?cursor=100&limit=20
+        — required = false: 첫 페이지에서는 cursor가 없으므로 선택적
+        — defaultValue = "20": limit을 안 보내면 기본 20개
+
+      @PathVariable vs @RequestParam 차이:
+        — @PathVariable: URL 경로의 일부 (/users/{username}/followers → username)
+        — @RequestParam: URL 뒤의 ?key=value (cursor, limit)
+        — 리소스 식별 = PathVariable, 옵션/필터 = RequestParam
+    */
+    @GetMapping("/{username}/followers")
+    public ApiResponse<CursorPageResponse<FollowListResponse>> getFollowers(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable String username,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int limit) {
+        CursorPageResponse<FollowListResponse> response =
+                followService.getFollowers(userDetails.getMemberId(), username, cursor, limit);
+        return ApiResponse.success(response, "팔로워 목록 조회에 성공하였습니다.");
+    }
+
+    /*
+      GET /api/users/{username}/following — 팔로잉 목록 조회
+      — 팔로워 목록과 동일한 구조, 데이터 방향만 다름
+    */
+    @GetMapping("/{username}/following")
+    public ApiResponse<CursorPageResponse<FollowListResponse>> getFollowing(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable String username,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int limit) {
+        CursorPageResponse<FollowListResponse> response =
+                followService.getFollowing(userDetails.getMemberId(), username, cursor, limit);
+        return ApiResponse.success(response, "팔로잉 목록 조회에 성공하였습니다.");
     }
 }
