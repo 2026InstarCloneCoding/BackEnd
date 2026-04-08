@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.post.service;
 
+import com.instagram.backend.domain.bookmark.repository.BookmarkRepository;
+import com.instagram.backend.domain.comment.repository.CommentRepository;
 import com.instagram.backend.domain.member.entity.Member;
 import com.instagram.backend.domain.member.repository.MemberRepository;
 import com.instagram.backend.domain.post.dto.PostCreateRequest;
@@ -9,12 +11,15 @@ import com.instagram.backend.domain.post.dto.PostUpdateRequest;
 import com.instagram.backend.domain.post.entity.Post;
 import com.instagram.backend.domain.post.entity.PostImage;
 import com.instagram.backend.domain.post.repository.PostImageRepository;
+import com.instagram.backend.domain.post.repository.PostLikeRepository;
 import com.instagram.backend.domain.post.repository.PostRepository;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,13 +28,22 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final PostImageRepository postImageRepository;
+    private final PostLikeRepository postLikeRepository;
+    private final BookmarkRepository bookmarkRepository;
+    private final CommentRepository commentRepository;
     private final MemberRepository memberRepository;
 
     // 게시물 단건 조회
-    public PostResponse getPost(Long postId) {
+    public PostResponse getPost(Long memberId, Long postId) {
         Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
-        return PostResponse.from(post);
+
+        List<PostImage> images = postImageRepository.findByPostPostIdOrderBySortOrderAsc(postId);
+        boolean isLiked = postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
+        boolean isBookmarked = bookmarkRepository.existsByPostIdAndMemberId(postId, memberId);
+        int commentCount = commentRepository.countByPostIdAndIsDeletedFalse(postId);
+
+        return PostResponse.of(post, images, isLiked, isBookmarked, commentCount);
     }
 
     // 게시물 생성
@@ -79,7 +93,7 @@ public class PostService {
 
     // 게시물 수정
     @Transactional
-    public PostResponse updatePost(Long memberId, Long postId, PostUpdateRequest request) {
+    public void updatePost(Long memberId, Long postId, PostUpdateRequest request) {
         // 내용 2200자 초과 검증
         if (request.getPostContents() != null && request.getPostContents().length() > 2200) {
             throw new BusinessException(ErrorCode.EXCEED_CONTENT_LENGTH);
@@ -94,7 +108,6 @@ public class PostService {
         }
 
         post.update(request.getPostContents(), request.isCommentEnabled());
-        return PostResponse.from(post);
     }
 
     // 게시물 삭제 (소프트 딜리트)
@@ -109,6 +122,5 @@ public class PostService {
         }
 
         post.softDelete();
-        // save() 불필요 — @Transactional 안에서 필드 변경 시 자동 UPDATE (Dirty Checking)
     }
 }

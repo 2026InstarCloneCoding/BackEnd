@@ -27,9 +27,10 @@ public class PostController {
     // 게시물 단건 조회 — GET /api/posts/{postId}
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponse>> getPost(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
         return ResponseEntity.ok(
-                ApiResponse.success(postService.getPost(postId), "게시물 조회 성공")
+                ApiResponse.success(postService.getPost(userDetails.getMemberId(), postId), "게시물 조회 성공")
         );
     }
 
@@ -45,12 +46,13 @@ public class PostController {
 
     // 게시물 수정 — PATCH /api/posts/{postId}
     @PatchMapping("/{postId}")
-    public ResponseEntity<ApiResponse<PostResponse>> updatePost(
+    public ResponseEntity<ApiResponse<Void>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
             @RequestBody PostUpdateRequest request) {
+        postService.updatePost(userDetails.getMemberId(), postId, request);
         return ResponseEntity.ok(
-                ApiResponse.success(postService.updatePost(userDetails.getMemberId(), postId, request), "게시물이 수정되었습니다.")
+                ApiResponse.success(null, "게시물이 수정되었습니다.")
         );
     }
 
@@ -99,7 +101,7 @@ public class PostController {
     public ResponseEntity<ApiResponse<Void>> unbookmarkPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId){
-        bookmarkService.bookmarkPost(userDetails.getMemberId(), postId);
-        return ResponseEntity.ok(ApiResponse.success(null, "게시물이 저장이 취소되었습니다."));
+        bookmarkService.unbookmarkPost(userDetails.getMemberId(), postId);
+        return ResponseEntity.ok(ApiResponse.success(null, "게시물 저장이 취소되었습니다."));
     }
 }
