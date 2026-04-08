@@ -44,4 +44,14 @@ public class Post extends BaseSoftDeleteEntity {
         this.contents = contents;
         this.commentEnabled = commentEnabled;
     }
+    //좋아요 수 up
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+    //좋아요 수 down
+    public void decreaseLikeCount() {
+       if (this.likeCount > 0) this.likeCount--;
+    }
+
+
 }
