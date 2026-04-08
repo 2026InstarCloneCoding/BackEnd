@@ -22,4 +22,8 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     // SELECT EXISTS(SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?)
     // → 내가(followerId) 상대(followingId)를 팔로우하고 있는지 확인
     boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
+
+    // 팔로우 관계를 조회 — 언팔로우 시 삭제할 Follow 엔티티를 찾기 위해 사용
+    // Optional: 관계가 없을 수도 있으므로 null-safe 처리
+    java.util.Optional<Follow> findByFollowerIdAndFollowingId(Long followerId, Long followingId);
 }
