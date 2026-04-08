@@ -37,7 +37,7 @@ public class Member extends BaseSoftDeleteEntity {
     @Column(nullable = false, length = 10)
     private String role;
 
-    @Column(length = 500)
+    @Column(length = 160)
     private String bio;
 
     @Column(length = 20)

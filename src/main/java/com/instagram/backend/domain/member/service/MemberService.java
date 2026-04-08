@@ -2,6 +2,8 @@ package com.instagram.backend.domain.member.service;
 
 import com.instagram.backend.domain.follow.repository.FollowRepository;
 import com.instagram.backend.domain.member.dto.*;
+import com.instagram.backend.domain.member.dto.ProfileImageUpdateRequest;
+import com.instagram.backend.domain.member.dto.ProfileImageUpdateResponse;
 import com.instagram.backend.domain.member.enums.Gender;
 import com.instagram.backend.domain.member.entity.Member;
 import com.instagram.backend.domain.member.repository.MemberRepository;
@@ -76,6 +78,48 @@ public class MemberService {
         boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(myMemberId, member.getMemberId());
 
         return UserProfileResponse.from(member, postCount, isFollowing);
+    }
+
+    /*
+      프로필 이미지 수정
+      — @Transactional: 이미지 정보를 변경하므로 쓰기 트랜잭션 필요
+      — image_type 검증: 허용된 MIME 타입만 통과시킴
+        MIME 타입이란? 파일의 종류를 나타내는 표준 형식 (예: image/jpeg, image/png)
+        브라우저나 서버가 "이 파일이 뭔지" 판단할 때 사용
+      — Entity의 updateProfileImage() 메서드로 값 변경 → dirty checking으로 자동 UPDATE
+    */
+    @Transactional
+    public ProfileImageUpdateResponse updateProfileImage(Long memberId, ProfileImageUpdateRequest request) {
+        Member member = findMemberById(memberId);
+
+        // 허용되는 이미지 MIME 타입 검증
+        validateImageType(request.getImageType());
+
+        // Entity의 도메인 메서드로 이미지 정보 변경
+        member.updateProfileImage(
+                request.getImageUrl(),
+                request.getImageType(),
+                request.getImageName(),
+                request.getImageUuid()
+        );
+
+        return ProfileImageUpdateResponse.from(member);
+    }
+
+    /*
+      이미지 MIME 타입 검증
+      — 허용 타입: image/jpeg, image/png, image/gif, image/webp
+      — 그 외의 타입이 들어오면 INVALID_IMAGE_TYPE 에러
+      — Set.of()로 불변 Set을 만들어서 contains()로 빠르게 검증
+    */
+    private static final java.util.Set<String> ALLOWED_IMAGE_TYPES = java.util.Set.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp"
+    );
+
+    private void validateImageType(String imageType) {
+        if (!ALLOWED_IMAGE_TYPES.contains(imageType)) {
+            throw new BusinessException(ErrorCode.INVALID_IMAGE_TYPE);
+        }
     }
 
     /*

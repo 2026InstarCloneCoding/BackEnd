@@ -49,6 +49,25 @@ public class MemberController {
         return ApiResponse.success(response, "프로필이 수정되었습니다.");
     }
 
+    /*
+      PATCH /api/users/me/image — 프로필 이미지 수정
+
+      프로필 수정(PATCH /me)과 분리한 이유:
+        — 프로필 텍스트(이름, 소개 등)와 이미지는 수정 시점이 다름
+        — 이미지는 업로드 후 URL을 받아서 보내므로 별도 API가 자연스러움
+        — 각 API의 책임이 명확해짐 (단일 책임 원칙)
+
+      @Valid — Request Body의 @NotBlank 검증을 실행
+        — 4개 필드 중 하나라도 빈 값이면 400 에러 반환
+    */
+    @PatchMapping("/me/image")
+    public ApiResponse<ProfileImageUpdateResponse> updateProfileImage(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody ProfileImageUpdateRequest request) {
+        ProfileImageUpdateResponse response = memberService.updateProfileImage(userDetails.getMemberId(), request);
+        return ApiResponse.success(response, "프로필 이미지가 수정되었습니다.");
+    }
+
     // GET /api/users/{username} — 다른 유저 프로필 조회
     @GetMapping("/{username}")
     public ApiResponse<UserProfileResponse> getUserProfile(
