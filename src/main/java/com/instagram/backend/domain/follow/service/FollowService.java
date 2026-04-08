@@ -1,14 +1,20 @@
 package com.instagram.backend.domain.follow.service;
 
+import com.instagram.backend.domain.follow.dto.FollowListResponse;
 import com.instagram.backend.domain.follow.entity.Follow;
 import com.instagram.backend.domain.follow.repository.FollowRepository;
 import com.instagram.backend.domain.member.entity.Member;
 import com.instagram.backend.domain.member.repository.MemberRepository;
+import com.instagram.backend.global.dto.CursorPageResponse;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /*
   FollowService — 팔로우/언팔로우 비즈니스 로직
@@ -100,6 +106,117 @@ public class FollowService {
         // 4. 양쪽 카운트 감소
         me.decrementFollowingCount();
         target.decrementFollowerCount();
+    }
+
+    /*
+      팔로워 목록 조회 (커서 기반 페이지네이션)
+
+      커서 페이지네이션 동작 원리:
+        1. 첫 요청: cursor=null → 가장 최신 팔로워부터 limit개 조회
+        2. 다음 요청: cursor=마지막follow_id → 그 ID보다 작은(이전) 것들 중 limit개 조회
+        3. 결과가 limit개보다 많으면(+1개 요청) → 다음 페이지가 있다는 뜻
+
+      왜 limit+1개를 조회하나?
+        — 20개를 요청했는데 21개가 나오면 → 다음 페이지 있음 (hasNext=true)
+        — 20개 이하로 나오면 → 마지막 페이지 (hasNext=false)
+        — 실제 응답에는 limit개만 담고, +1개는 hasNext 판별용으로만 사용
+
+      Follow → FollowListResponse 변환:
+        — Follow 엔티티에는 followerId/followingId(숫자)만 있음
+        — 프로필 정보(username, name 등)를 보여주려면 Member를 조회해야 함
+        — 팔로워 목록: followerId로 Member 조회 (나를 팔로우하는 사람)
+        — 팔로잉 목록: followingId로 Member 조회 (내가 팔로우하는 사람)
+    */
+    public CursorPageResponse<FollowListResponse> getFollowers(Long myMemberId, String username, String cursor, int limit) {
+        // 1. username으로 대상 Member 조회
+        Member target = findMemberByUsername(username);
+
+        // 2. limit 검증 (1~50)
+        validateLimit(limit);
+
+        // 3. 커서 기반으로 Follow 목록 조회 (+1개 더 조회해서 다음 페이지 여부 확인)
+        PageRequest pageRequest = PageRequest.of(0, limit + 1);
+        List<Follow> follows;
+
+        if (cursor == null) {
+            // 첫 페이지: 커서 없이 최신순으로
+            follows = followRepository.findByFollowingIdOrderByFollowIdDesc(target.getMemberId(), pageRequest);
+        } else {
+            // 다음 페이지: 커서(follow_id) 이전 데이터만
+            follows = followRepository.findByFollowingIdAndFollowIdLessThanOrderByFollowIdDesc(
+                    target.getMemberId(), Long.parseLong(cursor), pageRequest);
+        }
+
+        // 4. hasNext 판별 후 실제 응답 데이터는 limit개만
+        boolean hasNext = follows.size() > limit;
+        List<Follow> resultFollows = hasNext ? follows.subList(0, limit) : follows;
+
+        // 5. Follow → FollowListResponse 변환 (팔로워 = followerId로 Member 조회)
+        List<FollowListResponse> content = resultFollows.stream()
+                .map(follow -> {
+                    Member follower = findMemberById(follow.getFollowerId());
+                    boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(myMemberId, follower.getMemberId());
+                    return FollowListResponse.of(follower, isFollowing);
+                })
+                .collect(Collectors.toList());
+
+        // 6. 다음 커서 = 마지막 항목의 follow_id
+        String nextCursor = hasNext ? String.valueOf(resultFollows.get(resultFollows.size() - 1).getFollowId()) : null;
+
+        return CursorPageResponse.of(content, nextCursor, hasNext);
+    }
+
+    /*
+      팔로잉 목록 조회 — 팔로워 목록과 구조 동일, 조회 방향만 반대
+      — 팔로워: followingId로 검색 → followerId의 Member 정보 반환
+      — 팔로잉: followerId로 검색 → followingId의 Member 정보 반환
+    */
+    public CursorPageResponse<FollowListResponse> getFollowing(Long myMemberId, String username, String cursor, int limit) {
+        Member target = findMemberByUsername(username);
+        validateLimit(limit);
+
+        PageRequest pageRequest = PageRequest.of(0, limit + 1);
+        List<Follow> follows;
+
+        if (cursor == null) {
+            follows = followRepository.findByFollowerIdOrderByFollowIdDesc(target.getMemberId(), pageRequest);
+        } else {
+            follows = followRepository.findByFollowerIdAndFollowIdLessThanOrderByFollowIdDesc(
+                    target.getMemberId(), Long.parseLong(cursor), pageRequest);
+        }
+
+        boolean hasNext = follows.size() > limit;
+        List<Follow> resultFollows = hasNext ? follows.subList(0, limit) : follows;
+
+        // 팔로잉 = followingId로 Member 조회 (내가 팔로우하는 사람)
+        List<FollowListResponse> content = resultFollows.stream()
+                .map(follow -> {
+                    Member following = findMemberById(follow.getFollowingId());
+                    boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(myMemberId, following.getMemberId());
+                    return FollowListResponse.of(following, isFollowing);
+                })
+                .collect(Collectors.toList());
+
+        String nextCursor = hasNext ? String.valueOf(resultFollows.get(resultFollows.size() - 1).getFollowId()) : null;
+
+        return CursorPageResponse.of(content, nextCursor, hasNext);
+    }
+
+    /*
+      limit 검증 — API 명세에 따라 1~50 범위만 허용
+    */
+    private void validateLimit(int limit) {
+        if (limit < 1 || limit > 50) {
+            throw new BusinessException(ErrorCode.INVALID_LIMIT);
+        }
+    }
+
+    /*
+      username으로 Member 조회 (삭제되지 않은 유저만)
+    */
+    private Member findMemberByUsername(String username) {
+        return memberRepository.findByMemberUsernameAndIsDeletedFalse(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     /*
