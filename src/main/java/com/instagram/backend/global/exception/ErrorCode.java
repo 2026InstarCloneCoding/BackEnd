@@ -29,6 +29,8 @@ public enum ErrorCode {
     // 403 - 권한 오류
     AUTH_ACCESS_DENIED(403, "접근 권한이 없습니다."),
     FORBIDDEN(403, "본인의 게시물만 수정/삭제할 수 있습니다."),
+    STORY_ACCESS_DENIED(403, "본인의 스토리만 수정/삭제할 수 있습니다."),
+    BLOCKED_MEMBER(403, "차단된 사용자의 스토리입니다."),
 
     CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
 
@@ -38,6 +40,7 @@ public enum ErrorCode {
     LIKE_NOT_FOUND(404, "좋아요 내역이 존재하지 않습니다."),
     BOOKMARK_NOT_FOUND(404, "저장 내역이 존재하지 않습니다."),
     FOLLOW_NOT_FOUND(404, "팔로우 관계가 존재하지 않습니다."),
+    STORY_NOT_FOUND(404, "존재하지 않는 스토리입니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),

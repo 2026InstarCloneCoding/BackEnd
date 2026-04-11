@@ -1,5 +1,6 @@
 package com.instagram.backend.domain.story.entity;
 
+import com.instagram.backend.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "story_visitors")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StoryVisitor {
+public class StoryVisitor extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
