@@ -99,7 +99,7 @@ public class PostResponse {
         }
 
         public static MemberInfo from(Member member) {
-            return new MemberInfo(member.getId(), member.getMemberUsername(), member.getImageUrl());
+            return new MemberInfo(member.getMemberId(), member.getMemberUsername(), member.getImageUrl());
         }
     }
 }
