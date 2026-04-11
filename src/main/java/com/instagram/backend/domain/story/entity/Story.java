@@ -25,7 +25,7 @@ public class Story extends BaseSoftDeleteEntity {
     @Column(nullable = false, length = 500)
     private String imageUrl;
 
-    @Column(length = 10)
+    @Column(length = 50)
     private String imageType;
 
     @Column(length = 255)
