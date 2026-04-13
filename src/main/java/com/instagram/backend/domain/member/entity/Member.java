@@ -17,7 +17,7 @@ public class Member extends BaseSoftDeleteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id")
-    private Long id;
+    private Long memberId;
 
     @Column(name = "member_user_id", unique = true)
     private String userId;
@@ -64,8 +64,7 @@ public class Member extends BaseSoftDeleteEntity {
     @Column(nullable = false)
     private Long followingCount = 0L;
 
-    // DTO 호환 getter (getMemberId, getUsername)
-    public Long getMemberId() { return this.id; }
+    // DTO 호환 getter
     public String getUsername() { return this.memberUsername; }
 
     @Builder

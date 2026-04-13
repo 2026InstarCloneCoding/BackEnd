@@ -2,6 +2,8 @@ package com.instagram.backend.domain.follow.repository;
 
 import com.instagram.backend.domain.follow.entity.Follow;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import org.springframework.data.domain.Pageable;
 
@@ -61,4 +63,8 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     // 첫 페이지용 (커서 없을 때)
     List<Follow> findByFollowerIdOrderByFollowIdDesc(Long followerId, Pageable pageable);
+
+    // 내가 팔로우하는 사람들의 memberId 목록 조회 (스토리 피드용)
+    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :followerId")
+    List<Long> findFollowingIdsByFollowerId(@Param("followerId") Long followerId);
 }

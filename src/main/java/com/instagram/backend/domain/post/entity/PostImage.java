@@ -15,7 +15,7 @@ public class PostImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_image_id")
-    private Long id;
+    private Long postImageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -24,7 +24,7 @@ public class PostImage {
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;
 
-    @Column(name = "image_type", length = 10)
+    @Column(name = "image_type", length = 50)
     private String imageType;
 
     @Column(name = "image_name", length = 255)

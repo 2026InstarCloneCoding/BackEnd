@@ -25,3 +25,6 @@ logs/
 
 # OMC (Claude Code 도구 상태 파일)
 .omc/
+
+# 로컬 계획 파일
+plan/

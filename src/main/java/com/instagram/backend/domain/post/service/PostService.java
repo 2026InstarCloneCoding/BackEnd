@@ -103,7 +103,7 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         // 본인 게시물인지 확인
-        if (!post.getMember().getId().equals(memberId)) {
+        if (!post.getMember().getMemberId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
@@ -117,7 +117,7 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         // 본인 게시물인지 확인
-        if (!post.getMember().getId().equals(memberId)) {
+        if (!post.getMember().getMemberId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
