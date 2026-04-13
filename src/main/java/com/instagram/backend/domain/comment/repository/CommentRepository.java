@@ -22,7 +22,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // 대댓글 조회
     @Query("""
-            SELECT c FROM Comment c WHERE c.parentCommentId IN :parentIds AND c.idDeleted = false ORDER BY c.commentId ASC
+            SELECT c FROM Comment c WHERE c.parentCommentId IN :parentIds AND c.isDeleted = false ORDER BY c.commentId ASC
 """)
     List<Comment> findRepliesByParentCommentIds(@Param("parentIds") List<Long> parentIds);
 }

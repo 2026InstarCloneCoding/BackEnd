@@ -9,10 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +27,13 @@ public class CommentController {
         ));
     }
 
-
-
+    // 댓글 삭제 — DELETE /api/posts/{postId}/comments/{commentId}
+    @DeleteMapping("/api/posts/{postId}/comments/{commentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteComment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId,
+            @PathVariable Long commentId){
+        commentService.deleteComment(userDetails.getMemberId(), postId, commentId);
+        return ResponseEntity.ok(ApiResponse.success(null, "댓글이 삭제되었습니다."));
+    }
 }
