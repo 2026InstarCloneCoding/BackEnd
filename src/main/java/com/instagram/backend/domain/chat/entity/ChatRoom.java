@@ -20,7 +20,10 @@ public class ChatRoom extends BaseSoftDeleteEntity {
     @Column(name = "chat_room_type", nullable = false, length = 20)
     private String chatRoomType;
 
-    @Column(name = "chat_room_name", nullable = false, length = 20)
+    // 채팅방 이름 — nullable
+    // 1:1 채팅방은 항상 NULL, 그룹 채팅방은 생성 직후 NULL 후 이름 설정 API로 값 채움
+    // 프론트엔드는 null일 때 other_members의 username으로 화면 렌더링
+    @Column(name = "chat_room_name", length = 20)
     private String chatRoomName;
 
     @Builder
