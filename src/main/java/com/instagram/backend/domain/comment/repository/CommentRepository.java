@@ -15,9 +15,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     int countByPostIdAndIsDeletedFalse(Long postId);
     //삭제안된 댓글 가져오기
     Optional<Comment> findByCommentIdAndIsDeletedFalse(Long postId);
-    //가장 위 댓글(페이지네이션 없음)
+    //가장 위 댓글(페이지네이션 없음) 처음 들어왔을 때
     List<Comment>findByPostIdAndParentCommentIdIsNullAndIsDeletedFalseOrderByCommentIdAsc(Long postId, Pageable pageable);
-    //가장 위 댓글(페이지네이션 있음)
+    //가장 위 댓글(페이지네이션 있음) 다음거 볼 때
     List<Comment>findByPostIdAndParentCommentIdIsNullAndIsDeletedFalseAndCommentIdGreaterThanOrderByCommentIdAsc( Long postId, Long cursor, Pageable pageable);
 
     // 대댓글 조회
