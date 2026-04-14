@@ -69,11 +69,17 @@ public class ChatController {
 
       정렬 기준:
         — 서비스 레이어에서 처리 (last_message.sent_at DESC, 없으면 created_at DESC)
+
+      반환 타입:
+        — ResponseEntity<ApiResponse<...>> 로 감싸서 createChatRoom과 일관성 유지
+        — 명시적 200 OK 반환. 향후 다른 상태코드(예: 304 Not Modified) 필요 시 확장 용이
     */
     @GetMapping
-    public ApiResponse<List<ChatRoomListResponse>> getMyChatRooms(
+    public ResponseEntity<ApiResponse<List<ChatRoomListResponse>>> getMyChatRooms(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         List<ChatRoomListResponse> response = chatService.getMyChatRooms(userDetails.getMemberId());
-        return ApiResponse.success(response, "채팅방 목록 조회에 성공하였습니다.");
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "채팅방 목록 조회에 성공하였습니다.")
+        );
     }
 }

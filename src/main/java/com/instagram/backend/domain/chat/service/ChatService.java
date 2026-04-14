@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -73,6 +72,15 @@ public class ChatService {
 
       BLOCKED_MEMBER 검증은 MVP 이후로 미룸 (block 도메인 미구현)
 
+      ⚠ 알려진 race condition (TODO: 후속 이슈로 분리):
+        — 동일한 두 사용자가 동시에 createChatRoom을 호출하면 양쪽 트랜잭션 모두
+          findDmRoomIdBetween이 빈 결과를 반환 → 양쪽 모두 DM 방을 생성 → 중복 발생
+        — chat_room_members에 (chat_room_id, member_id) UNIQUE 제약을 둬도
+          서로 다른 chat_room_id로 INSERT되므로 막을 수 없음
+        — 해결안 후보: (a) (memberA, memberB) 정렬 쌍을 저장하는 dm_pairs 테이블 +
+          UNIQUE 제약, (b) 분산 락(Redis), (c) DB 격리수준 SERIALIZABLE
+        — MVP 단계에서는 동시 요청 가능성이 낮아 수용. 별도 이슈에서 해결 예정.
+
       @Transactional — 쓰기 작업이므로 override
     */
     @Transactional
@@ -83,9 +91,12 @@ public class ChatService {
         Set<Long> otherIds = new LinkedHashSet<>(requestMemberIds);
         otherIds.remove(myMemberId);
 
-        // 정제 후 상대가 0명이면 "참여자 없음" 에러 (자기 자신과의 채팅방은 불가)
+        // 정제 후 상대가 0명이면 "자기 자신과의 채팅방" 시도로 판단 → 명확한 에러 코드 반환
+        //    — MISSING_REQUIRED_FIELD(필드 누락)와 의미가 다르므로 SELF_CHAT_NOT_ALLOWED 사용
+        //    — @NotEmpty로 빈 배열은 컨트롤러 단에서 이미 차단되므로, 여기까지 왔다는 건
+        //      "원래 비어있지는 않았는데 정제 후 비었다" = "본인 ID만 있었다"는 뜻
         if (otherIds.isEmpty()) {
-            throw new BusinessException(ErrorCode.MISSING_REQUIRED_FIELD);
+            throw new BusinessException(ErrorCode.SELF_CHAT_NOT_ALLOWED);
         }
 
         // 2. 나를 포함한 전체 참여자 목록 (나 + 상대들)

@@ -33,6 +33,7 @@ public enum ErrorCode {
     BLOCKED_MEMBER(403, "차단된 사용자의 스토리입니다."),
 
     CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
+    SELF_CHAT_NOT_ALLOWED(400, "자기 자신과 채팅방을 만들 수 없습니다."),
 
     // 404 - 리소스 없음
     MEMBER_NOT_FOUND(404, "존재하지 않는 계정입니다."),

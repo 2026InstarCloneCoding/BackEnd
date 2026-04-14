@@ -1,6 +1,5 @@
 package com.instagram.backend.domain.chat.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,12 +22,11 @@ import java.util.List;
     — 1순위: last_message.sent_at DESC
     — 2순위: last_message가 null이면 chat_rooms.created_at DESC
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-    — null 필드를 JSON에 아예 포함시키지 않음
-    — 예: last_message=null이면 응답에서 키 자체가 빠짐 → 네트워크 절약 + 프론트 처리 단순
-    — 다만 "null로 명시해야 하는 필드"가 있다면 이 어노테이션을 뺄 수도 있음
-      현재 설계에서는 last_message/chat_room_name/preview가 null일 수 있고,
-      프론트는 필드 존재 여부로 체크하면 되므로 NON_NULL 사용
+  null 직렬화 정책:
+    — Jackson 기본값(Include.ALWAYS) 사용 — null 필드도 응답 JSON에 키 = null 형태로 노출
+    — 이유: 프론트가 "키 존재 여부"가 아니라 "값이 null이냐"로 분기하므로 키가 항상 있는 게 단순함
+    — 예: { "chat_room_name": null, "last_message": null, "unread_count": 0 }
+    — @JsonInclude를 따로 명시하지 않음 (NON_NULL 사용 안 함)
 */
 @Getter
 @Builder
@@ -40,14 +38,12 @@ public class ChatRoomListResponse {
     @JsonProperty("chat_room_type")
     private final String chatRoomType;
 
-    @JsonInclude(JsonInclude.Include.ALWAYS) // null이어도 명시적으로 노출
     @JsonProperty("chat_room_name")
     private final String chatRoomName;
 
     @JsonProperty("other_members")
     private final List<OtherMember> otherMembers;
 
-    @JsonInclude(JsonInclude.Include.ALWAYS) // null이어도 명시적으로 노출
     @JsonProperty("last_message")
     private final LastMessage lastMessage;
 
@@ -93,7 +89,6 @@ public class ChatRoomListResponse {
         @JsonProperty("message_type")
         private final String messageType;
 
-        @JsonInclude(JsonInclude.Include.ALWAYS)
         @JsonProperty("preview")
         private final String preview;
 
