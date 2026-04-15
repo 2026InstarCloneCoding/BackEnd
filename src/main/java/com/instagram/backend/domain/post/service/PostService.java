@@ -57,10 +57,6 @@ public class PostService {
         if (request.getImages().size() > 10) {
             throw new BusinessException(ErrorCode.EXCEED_IMAGE_LIMIT);
         }
-        // 내용 2200자 초과 검증
-        if (request.getPostContents() != null && request.getPostContents().length() > 2200) {
-            throw new BusinessException(ErrorCode.EXCEED_CONTENT_LENGTH);
-        }
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -94,11 +90,6 @@ public class PostService {
     // 게시물 수정
     @Transactional
     public void updatePost(Long memberId, Long postId, PostUpdateRequest request) {
-        // 내용 2200자 초과 검증
-        if (request.getPostContents() != null && request.getPostContents().length() > 2200) {
-            throw new BusinessException(ErrorCode.EXCEED_CONTENT_LENGTH);
-        }
-
         Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
