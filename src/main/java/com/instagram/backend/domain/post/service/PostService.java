@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -70,9 +71,10 @@ public class PostService {
         postRepository.save(post);
 
         // 이미지 저장
+        List<PostImage> images = new ArrayList<>();
         for (int i = 0; i < request.getImages().size(); i++) {
             var imageReq = request.getImages().get(i);
-            PostImage postImage = PostImage.builder()
+            images.add(PostImage.builder()
                     .post(post)
                     .imageUrl(imageReq.getPostImageUrl())
                     .imageType(imageReq.getPostImageType())
@@ -80,9 +82,9 @@ public class PostService {
                     .imageUuid(imageReq.getPostImageUuid())
                     .altText(imageReq.getPostImageAltText())
                     .sortOrder(i)
-                    .build();
-            postImageRepository.save(postImage);
+                    .build());
         }
+        postImageRepository.saveAll(images);
 
         return PostCreateResponse.from(post);
     }
