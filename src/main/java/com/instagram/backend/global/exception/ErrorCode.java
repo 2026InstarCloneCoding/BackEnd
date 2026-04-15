@@ -33,6 +33,7 @@ public enum ErrorCode {
     BLOCKED_MEMBER(403, "차단된 사용자의 스토리입니다."),
 
     CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
+    SELF_CHAT_NOT_ALLOWED(400, "자기 자신과 채팅방을 만들 수 없습니다."),
 
     // 404 - 리소스 없음
     MEMBER_NOT_FOUND(404, "존재하지 않는 계정입니다."),
@@ -41,6 +42,7 @@ public enum ErrorCode {
     BOOKMARK_NOT_FOUND(404, "저장 내역이 존재하지 않습니다."),
     FOLLOW_NOT_FOUND(404, "팔로우 관계가 존재하지 않습니다."),
     STORY_NOT_FOUND(404, "존재하지 않는 스토리입니다."),
+    ROOM_NOT_FOUND(404, "존재하지 않는 채팅방입니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
@@ -48,6 +50,7 @@ public enum ErrorCode {
     ALREADY_LIKED(409, "이미 좋아요한 게시물입니다."),
     ALREADY_BOOKMARKED(409, "이미 저장한 게시물입니다."),
     ALREADY_FOLLOWING(409, "이미 팔로우한 사용자입니다."),
+    ROOM_ALREADY_EXISTS(409, "이미 존재하는 채팅방입니다."),
 
     // 500 - 서버 오류
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
