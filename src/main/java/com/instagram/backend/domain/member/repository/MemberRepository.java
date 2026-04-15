@@ -13,6 +13,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByMemberUsernameAndIsDeletedFalse(String memberUsername);
 
+    // 단일 memberId 조회 (소프트 삭제된 계정 자동 제외)
+    // 메시지 전송 응답에 작성자 username/profileImageUrl을 담을 때 사용
+    // findById(Long)은 is_deleted 필터가 없어 탈퇴 계정의 정보가 노출될 수 있으므로
+    // 프로젝트 전반의 "findByXxxIdAndIsDeletedFalse" 패턴을 따름
+    Optional<Member> findByMemberIdAndIsDeletedFalse(Long memberId);
+
     boolean existsByEmail(String email);
 
     boolean existsByMemberUsername(String memberUsername);

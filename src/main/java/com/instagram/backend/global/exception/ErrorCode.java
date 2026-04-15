@@ -11,7 +11,8 @@ public enum ErrorCode {
     EXCEED_IMAGE_LIMIT(400, "이미지는 최대 10개까지 첨부 가능합니다."),
     EXCEED_CONTENT_LENGTH(400, "게시물 내용은 2200자 이내로 입력해주세요."),
     INVALID_TAG_USERNAME(400, "태그한 사용자를 찾을 수 없습니다."),
-    INVALID_LIMIT(400, "limit 값이 올바르지 않습니다. (1~30)"),
+    INVALID_LIMIT(400, "limit 값이 올바르지 않습니다."),
+    INVALID_CURSOR(400, "cursor 값이 올바르지 않습니다."),
     INVALID_EMAIL_FORMAT(400, "이메일 형식이 올바르지 않습니다."),
     INVALID_PASSWORD_FORMAT(400, "비밀번호는 8자 이상이어야 합니다."),
     INVALID_USERNAME_FORMAT(400, "유저네임은 영문, 숫자, _만 사용 가능합니다."),
@@ -20,6 +21,8 @@ public enum ErrorCode {
     INVALID_GENDER_VALUE(400, "성별 값이 올바르지 않습니다. (MALE/FEMALE/OTHER)"),
     INVALID_IMAGE_TYPE(400, "지원하지 않는 이미지 형식입니다."),
     EXCEED_COMMENT_LENGTH(400, "댓글 내용은 500자 이내로 입력해주세요."),
+    INVALID_DTYPE(400, "올바르지 않은 메시지 타입입니다."),
+    MISSING_MESSAGE_CONTENT(400, "메시지 내용을 입력해주세요."),
 
     // 401 - 인증 오류
     UNAUTHORIZED(401, "로그인이 필요합니다."),
@@ -34,6 +37,7 @@ public enum ErrorCode {
     BLOCKED_MEMBER(403, "차단된 사용자의 스토리입니다."),
     COMMENT_DISABLED(403, "댓글이 허용되지 않는 게시물입니다."),
     COMMENT_FORBIDDEN(403, "댓글 작성자 또는 게시물 주인만 삭제할 수 있습니다."),
+    CHAT_ROOM_FORBIDDEN(403, "해당 채팅방에 접근 권한이 없습니다."),
 
     CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
     SELF_CHAT_NOT_ALLOWED(400, "자기 자신과 채팅방을 만들 수 없습니다."),

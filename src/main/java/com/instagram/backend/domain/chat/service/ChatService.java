@@ -10,6 +10,7 @@ import com.instagram.backend.domain.member.entity.Member;
 import com.instagram.backend.domain.member.repository.MemberRepository;
 import com.instagram.backend.domain.message.entity.Message;
 import com.instagram.backend.domain.message.entity.MessageText;
+import com.instagram.backend.domain.message.entity.MessageType;
 import com.instagram.backend.domain.message.repository.MessageRepository;
 import com.instagram.backend.domain.message.repository.MessageTextRepository;
 import com.instagram.backend.global.exception.BusinessException;
@@ -44,10 +45,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ChatService {
 
-    // 메시지 타입 상수 — 매직 스트링 방지
+    // 채팅방 타입 상수 — 매직 스트링 방지
     private static final String CHAT_ROOM_TYPE_DM = "DM";
     private static final String CHAT_ROOM_TYPE_GROUP = "GROUP";
-    private static final String MESSAGE_TYPE_TEXT = "TEXT";
     // 미리보기 본문 최대 길이 (긴 텍스트 잘라서 전송 → 네트워크 절약)
     private static final int PREVIEW_MAX_LENGTH = 50;
 
@@ -238,7 +238,7 @@ public class ChatService {
             Optional<Message> latest = messageRepository.findTopByChatRoomIdAndIsDeletedFalseOrderByMessageIdDesc(roomId);
             latest.ifPresent(msg -> {
                 lastMessageByRoomId.put(roomId, msg);
-                if (MESSAGE_TYPE_TEXT.equals(msg.getMessageType())) {
+                if (MessageType.TEXT.name().equals(msg.getMessageType())) {
                     textMessageIds.add(msg.getMessageId());
                 }
             });
