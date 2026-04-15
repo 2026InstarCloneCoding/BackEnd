@@ -68,16 +68,25 @@ public class CommentService {
     //댓글 삭제
     @Transactional
     public void deleteComment(Long memberId, Long postId, Long commentId){
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
-                .orElseThrow(()->new BusinessException(ErrorCode.POST_NOT_FOUND));
-        Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
-                .orElseThrow(()->new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
-        boolean isCommentAuthor = comment.getMemberId().equals(memberId);
-        boolean isPostOwner = post.getMember().getMemberId().equals(memberId);
-        if (!isCommentAuthor && !isPostOwner){
-            throw new BusinessException(ErrorCode.COMMENT_FORBIDDEN);
-        }
-        comment.softDelete();
+    Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+    // 댓글이 실제로 해당 게시물의 것인지 검증
+    if (!comment.getPostId().equals(postId)) {
+        throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+    }
+
+    boolean isCommentAuthor = comment.getMemberId().equals(memberId);
+
+    // 게시물 주인 체크는 comment.getPostId()로 post를 다시 조회
+    Post post = postRepository.findByPostIdAndIsDeletedFalse(comment.getPostId())
+        .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+    boolean isPostOwner = post.getMember().getMemberId().equals(memberId);
+
+    if (!isCommentAuthor && !isPostOwner) {
+        throw new BusinessException(ErrorCode.COMMENT_FORBIDDEN);
+    }
+    comment.softDelete();
     }
 
     //댓글 조회
@@ -103,8 +112,8 @@ public class CommentService {
         if (comments.isEmpty()){
             return CommentListResponse.builder()
                     .comments(List.of())
-                    .nextCursor(null)
                     .hasMore(false)
+                    .nextCursor(null)
                     .build();
         }
         // 대댓글 일괄 조회
