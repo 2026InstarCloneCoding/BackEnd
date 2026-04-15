@@ -15,6 +15,19 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     // → 내가 참여 중인 모든 chat_room_id를 얻기 위한 첫 단계
     List<ChatRoomMember> findByMemberId(Long memberId);
 
+    /*
+      특정 유저가 특정 채팅방의 참여자인지 확인
+
+      목적: 메시지 전송/조회 API의 참여자 권한 검증
+        — SELECT 1 FROM chat_room_members WHERE chat_room_id = ? AND member_id = ? LIMIT 1
+        — Spring Data JPA의 existsBy... 메서드는 존재 여부만 반환 (count 또는 limit 1)
+        — 전체 row를 JVM으로 끌어오는 findByChatRoomIdIn() + stream().anyMatch() 패턴의 대체
+
+      사용처:
+        — MessageService.sendMessage / getMessages 의 권한 검증
+    */
+    boolean existsByChatRoomIdAndMemberId(Long chatRoomId, Long memberId);
+
     // 여러 채팅방의 참여자 목록을 IN 절 배치 조회 (N+1 회피)
     // SELECT * FROM chat_room_members WHERE chat_room_id IN (?, ?, ...)
     // → 내가 속한 room들의 "다른 참여자" 정보를 한 번에 가져올 때 사용
