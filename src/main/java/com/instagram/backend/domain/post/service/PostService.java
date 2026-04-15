@@ -36,7 +36,7 @@ public class PostService {
 
     // 게시물 단건 조회
     public PostResponse getPost(Long memberId, Long postId) {
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+        Post post = postRepository.findByPostIdWithMemberAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         List<PostImage> images = postImageRepository.findByPostPostIdOrderBySortOrderAsc(postId);
@@ -92,7 +92,7 @@ public class PostService {
     // 게시물 수정
     @Transactional
     public void updatePost(Long memberId, Long postId, PostUpdateRequest request) {
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+        Post post = postRepository.findByPostIdWithMemberAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         validatePostOwner(post, memberId);
@@ -102,7 +102,7 @@ public class PostService {
     // 게시물 삭제 (소프트 딜리트)
     @Transactional
     public void deletePost(Long memberId, Long postId) {
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+        Post post = postRepository.findByPostIdWithMemberAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         validatePostOwner(post, memberId);
