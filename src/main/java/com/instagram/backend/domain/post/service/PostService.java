@@ -93,11 +93,7 @@ public class PostService {
         Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        // 본인 게시물인지 확인
-        if (!post.getMember().getMemberId().equals(memberId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        }
-
+        validatePostOwner(post, memberId);
         post.update(request.getPostContents(), request.isCommentEnabled());
     }
 
@@ -107,11 +103,13 @@ public class PostService {
         Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        // 본인 게시물인지 확인
+        validatePostOwner(post, memberId);
+        post.softDelete();
+    }
+
+    private void validatePostOwner(Post post, Long memberId) {
         if (!post.getMember().getMemberId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
-
-        post.softDelete();
     }
 }
