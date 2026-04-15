@@ -19,6 +19,7 @@ public enum ErrorCode {
     INVALID_BIO_LENGTH(400, "소개글은 160자 이내로 입력해주세요."),
     INVALID_GENDER_VALUE(400, "성별 값이 올바르지 않습니다. (MALE/FEMALE/OTHER)"),
     INVALID_IMAGE_TYPE(400, "지원하지 않는 이미지 형식입니다."),
+    EXCEED_COMMENT_LENGTH(400, "댓글 내용은 500자 이내로 입력해주세요."),
 
     // 401 - 인증 오류
     UNAUTHORIZED(401, "로그인이 필요합니다."),
@@ -31,6 +32,8 @@ public enum ErrorCode {
     FORBIDDEN(403, "본인의 게시물만 수정/삭제할 수 있습니다."),
     STORY_ACCESS_DENIED(403, "본인의 스토리만 수정/삭제할 수 있습니다."),
     BLOCKED_MEMBER(403, "차단된 사용자의 스토리입니다."),
+    COMMENT_DISABLED(403, "댓글이 허용되지 않는 게시물입니다."),
+    COMMENT_FORBIDDEN(403, "댓글 작성자 또는 게시물 주인만 삭제할 수 있습니다."),
 
     CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
     SELF_CHAT_NOT_ALLOWED(400, "자기 자신과 채팅방을 만들 수 없습니다."),
@@ -42,6 +45,8 @@ public enum ErrorCode {
     BOOKMARK_NOT_FOUND(404, "저장 내역이 존재하지 않습니다."),
     FOLLOW_NOT_FOUND(404, "팔로우 관계가 존재하지 않습니다."),
     STORY_NOT_FOUND(404, "존재하지 않는 스토리입니다."),
+    COMMENT_NOT_FOUND(404, "존재하지 않는 댓글입니다."),
+    COMMENT_LIKE_NOT_FOUND(404, "댓글 좋아요 내역이 존재하지 않습니다."),
     ROOM_NOT_FOUND(404, "존재하지 않는 채팅방입니다."),
 
     // 409 - 중복
@@ -50,6 +55,7 @@ public enum ErrorCode {
     ALREADY_LIKED(409, "이미 좋아요한 게시물입니다."),
     ALREADY_BOOKMARKED(409, "이미 저장한 게시물입니다."),
     ALREADY_FOLLOWING(409, "이미 팔로우한 사용자입니다."),
+    ALREADY_COMMENT_LIKED(409, "이미 좋아요한 댓글입니다."),
     ROOM_ALREADY_EXISTS(409, "이미 존재하는 채팅방입니다."),
 
     // 500 - 서버 오류
