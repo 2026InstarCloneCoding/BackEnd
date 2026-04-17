@@ -3,6 +3,7 @@ package com.instagram.backend.domain.comment.repository;
 import com.instagram.backend.domain.comment.entity.Comment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,4 +26,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             SELECT c FROM Comment c WHERE c.parentCommentId IN :parentIds AND c.isDeleted = false ORDER BY c.commentId ASC
 """)
     List<Comment> findRepliesByParentCommentIds(@Param("parentIds") List<Long> parentIds);
+
+    // 좋아요 카운트 원자적 증가 (동시성 안전)
+    @Modifying
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + 1 WHERE c.commentId = :commentId")
+    void incrementLikeCount(@Param("commentId") Long commentId);
+
+    // 좋아요 카운트 원자적 감소 (0 미만 방어 포함)
+    @Modifying
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.commentId = :commentId AND c.likeCount > 0")
+    void decrementLikeCount(@Param("commentId") Long commentId);
 }

@@ -20,22 +20,30 @@ public class CommentLikeService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
 
-    //댓글 좋아요
+    private void validateIds(Long memberId, Long postId, Long commentId) {
+        if (memberId == null || postId == null || commentId == null) {
+            throw new BusinessException(ErrorCode.MISSING_REQUIRED_FIELD);
+        }
+    }
+
+    // 댓글 좋아요
     @Transactional
     public void likeComment(Long memberId, Long postId, Long commentId) {
-        //게시물 확인
+        // ① 값 자체 유효성 검증
+        validateIds(memberId, postId, commentId);
+
+        // ② DB 존재 여부 확인
         postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        //댓글 확인
         Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
-        //해당 게시물 댓글인지 확인
-        if(!comment.getPostId().equals(postId)){
+
+        // ③ 비즈니스 규칙 검증
+        if (!comment.getPostId().equals(postId)) {
             throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
         }
-        //좋아요가 있는 지 확인
-        if (commentLikeRepository.existsByMemberIdAndCommentId(memberId,commentId)){
+        if (commentLikeRepository.existsByMemberIdAndCommentId(memberId, commentId)) {
             throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
         }
 
@@ -43,29 +51,35 @@ public class CommentLikeService {
                 .memberId(memberId)
                 .commentId(commentId)
                 .build());
-        // 비정규 카운트 up
-        comment.increaseLikeCount();
+
+        // 원자적 UPDATE (동시성 안전)
+        commentRepository.incrementLikeCount(commentId);
     }
-    //댓글 좋아요 취소
+
+    // 댓글 좋아요 취소
     @Transactional
-    public void unlikeComment(Long memberId, Long postId, Long commentId){
-        //게시물 확인
+    public void unlikeComment(Long memberId, Long postId, Long commentId) {
+        // ① 값 자체 유효성 검증
+        validateIds(memberId, postId, commentId);
+
+        // ② DB 존재 여부 확인
         postRepository.findByPostIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        //댓글 확인
         Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
-        //해당 게시물 댓글인지 확인
-        if(!comment.getPostId().equals(postId)){
+
+        // ③ 비즈니스 규칙 검증
+        if (!comment.getPostId().equals(postId)) {
             throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
         }
-        // 좋아요 삭제할 부분 찾기(좋아요 이미 했는가 안했는가)
-        CommentLike commentLike = commentLikeRepository.findByMemberIdAndCommentId(memberId,commentId)
+
+        CommentLike commentLike = commentLikeRepository.findByMemberIdAndCommentId(memberId, commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
 
         commentLikeRepository.delete(commentLike);
-        //비정규 좋아요 down
-        comment.decreaseLikeCount();
+
+        // 원자적 UPDATE (0 미만 방어 포함)
+        commentRepository.decrementLikeCount(commentId);
     }
 }
