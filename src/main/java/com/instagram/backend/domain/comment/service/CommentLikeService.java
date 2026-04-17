@@ -46,5 +46,21 @@ public class CommentLikeService {
         // 비정규 카운트 up
         comment.increaseLikeCount();
     }
+    //댓글 좋아요 취소
+    public void unlikeComment(Long memberId, Long postId, Long commentId){
+        //게시물 확인
+        postRepository.findByPostIdAndIsDeletedFalse(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
+        //댓글 확인
+        Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+        // 좋아요 삭제할 부분 찾기(좋아요 이미 했는가 안했는가)
+        CommentLike commentLike = commentLikeRepository.findByMemberIdAndCommentId(memberId,commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
+
+        commentLikeRepository.delete(commentLike);
+        //비정규 좋아요 down
+        comment.decreaseLikeCount();
+    }
 }

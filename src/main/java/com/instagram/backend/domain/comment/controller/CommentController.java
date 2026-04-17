@@ -63,4 +63,14 @@ public class CommentController {
         commentLikeService.likeComment(userDetails.getMemberId(), postId, commentId);
         return ResponseEntity.ok(ApiResponse.success(null, "댓글 좋아요 완료"));
     }
+
+    // 댓글 좋아요 취소  DELETE /api/posts/{postId}/comments/{commentId}/likes
+    @DeleteMapping("/api/posts/{postId}/comments/{commentId}/likes")
+    public ResponseEntity<ApiResponse<Void>> unlikeComment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId,
+            @PathVariable Long commentId) {
+        commentLikeService.unlikeComment(userDetails.getMemberId(), postId, commentId);
+        return ResponseEntity.ok(ApiResponse.success(null, "댓글 좋아요 취소 완료"));
+    }
 }
