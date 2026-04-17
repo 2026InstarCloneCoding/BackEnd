@@ -8,6 +8,7 @@ import com.instagram.backend.domain.post.repository.PostRepository;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,10 +48,14 @@ public class CommentLikeService {
             throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
         }
 
-        commentLikeRepository.save(CommentLike.builder()
-                .memberId(memberId)
-                .commentId(commentId)
-                .build());
+        try {
+            commentLikeRepository.save(CommentLike.builder()
+                    .memberId(memberId)
+                    .commentId(commentId)
+                    .build());
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
+        }
 
         // 원자적 UPDATE — 0건이면 댓글이 삭제됐거나 경합 발생 → 롤백
         int updated = commentRepository.incrementLikeCountAndIsDeletedFalse(commentId);
