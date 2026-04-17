@@ -71,6 +71,6 @@ public class CommentController {
             @PathVariable Long postId,
             @PathVariable Long commentId) {
         commentLikeService.unlikeComment(userDetails.getMemberId(), postId, commentId);
-        return ResponseEntity.ok(ApiResponse.success(null, "댓글 좋아요 취소 완료"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null, "댓글 좋아요 완료"));
     }
 }
