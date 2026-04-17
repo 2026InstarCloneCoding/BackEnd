@@ -30,10 +30,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 좋아요 카운트 원자적 증가 (동시성 안전)
     @Modifying
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount + 1 WHERE c.commentId = :commentId AND c.isDeleted = false")
-    int incrementLikeCount(@Param("commentId") Long commentId); // void -> int로 변경
+    int incrementLikeCountAndIsDeletedFalse(@Param("commentId") Long commentId);
 
     // 좋아요 카운트 원자적 감소 (0 미만 방어 포함)
     @Modifying
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.commentId = :commentId AND c.isDeleted = false AND c.likeCount > 0")
-    int decrementLikeCount(@Param("commentId") Long commentId); // void -> int로 변경, 중복 조건 제거
+    int decrementLikeCountAndIsDeletedFalse(@Param("commentId") Long commentId);
 }

@@ -52,8 +52,11 @@ public class CommentLikeService {
                 .commentId(commentId)
                 .build());
 
-        // 원자적 UPDATE (동시성 안전)
-        commentRepository.incrementLikeCount(commentId);
+        // 원자적 UPDATE — 0건이면 댓글이 삭제됐거나 경합 발생 → 롤백
+        int updated = commentRepository.incrementLikeCountAndIsDeletedFalse(commentId);
+        if (updated != 1) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
     }
 
     // 댓글 좋아요 취소
@@ -79,7 +82,10 @@ public class CommentLikeService {
 
         commentLikeRepository.delete(commentLike);
 
-        // 원자적 UPDATE (0 미만 방어 포함)
-        commentRepository.decrementLikeCount(commentId);
+        // 원자적 UPDATE — 0건이면 댓글이 삭제됐거나 경합 발생 → 롤백
+        int updated = commentRepository.decrementLikeCountAndIsDeletedFalse(commentId);
+        if (updated != 1) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
     }
 }
