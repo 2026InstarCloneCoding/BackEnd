@@ -47,6 +47,7 @@ public class CommentLikeService {
         comment.increaseLikeCount();
     }
     //댓글 좋아요 취소
+    @Transactional
     public void unlikeComment(Long memberId, Long postId, Long commentId){
         //게시물 확인
         postRepository.findByPostIdAndIsDeletedFalse(postId)
@@ -55,6 +56,10 @@ public class CommentLikeService {
         //댓글 확인
         Comment comment = commentRepository.findByCommentIdAndIsDeletedFalse(commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+        //해당 게시물 댓글인지 확인
+        if(!comment.getPostId().equals(postId)){
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
         // 좋아요 삭제할 부분 찾기(좋아요 이미 했는가 안했는가)
         CommentLike commentLike = commentLikeRepository.findByMemberIdAndCommentId(memberId,commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_LIKE_NOT_FOUND));
