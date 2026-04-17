@@ -3,6 +3,7 @@ package com.instagram.backend.domain.comment.controller;
 import com.instagram.backend.domain.comment.dto.request.CommentCreateRequest;
 import com.instagram.backend.domain.comment.dto.response.CommentCreateResponse;
 import com.instagram.backend.domain.comment.dto.response.CommentListResponse;
+import com.instagram.backend.domain.comment.service.CommentLikeService;
 import com.instagram.backend.domain.comment.service.CommentService;
 import com.instagram.backend.global.dto.ApiResponse;
 import com.instagram.backend.global.security.CustomUserDetails;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CommentController {
     private final CommentService commentService;
+    private final CommentLikeService commentLikeService;
 
     //댓글 생성 POST /api/posts/{postId}/comments
     @PostMapping("/api/posts/{postId}/comments")
@@ -52,4 +54,24 @@ public class CommentController {
         );
     }
 
+    // 댓글 좋아요  POST /api/posts/{postId}/comments/{commentId}/likes
+    @PostMapping("/api/posts/{postId}/comments/{commentId}/likes")
+    public ResponseEntity<ApiResponse<Void>> likeComment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId,
+            @PathVariable Long commentId) {
+        commentLikeService.likeComment(userDetails.getMemberId(), postId, commentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null, "댓글 좋아요 완료"));
+
+    }
+
+    // 댓글 좋아요 취소  DELETE /api/posts/{postId}/comments/{commentId}/likes
+    @DeleteMapping("/api/posts/{postId}/comments/{commentId}/likes")
+    public ResponseEntity<ApiResponse<Void>> unlikeComment(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId,
+            @PathVariable Long commentId) {
+        commentLikeService.unlikeComment(userDetails.getMemberId(), postId, commentId);
+        return ResponseEntity.ok(ApiResponse.success(null, "댓글 좋아요 취소 완료"));
+    }
 }
