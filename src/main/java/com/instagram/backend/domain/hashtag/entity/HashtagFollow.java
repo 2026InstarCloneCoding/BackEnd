@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "hashtag_follows")
+@Table(name = "hashtag_follows", uniqueConstraints = @UniqueConstraint(name = "uk_hashtag_follows_member_hashtag", columnNames = {"member_id", "hashtag_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HashtagFollow {
@@ -15,10 +15,10 @@ public class HashtagFollow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long hashtagFollowId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "member_id")
     private Long memberId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "hashtag_id")
     private Long hashtagId;
 
     @Builder

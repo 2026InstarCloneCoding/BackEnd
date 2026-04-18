@@ -23,11 +23,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.dao.DataIntegrityViolationException;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -133,13 +138,14 @@ public class PostService {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
-        // 연결된 해시태그 카운트 감소
-        List<Long> linkedHashtagIds = postHashtagRepository.findHashtagIdsByPostId(postId);//한 게시물의 해시태그 조회
-        if (!linkedHashtagIds.isEmpty()) {//해시태그 있을 때 한방에 조회
+        // 연결된 해시태그 카운트 감소 — findByPostId 한 번만 조회해서 재사용
+        List<PostHashtag> postHashtags = postHashtagRepository.findByPostId(postId);
+        if (!postHashtags.isEmpty()) {
+            List<Long> linkedHashtagIds = postHashtags.stream()
+                    .map(PostHashtag::getHashtagId).toList();
             List<Hashtag> hashtags = hashtagRepository.findByHashtagIdIn(linkedHashtagIds);
-            hashtags.forEach(Hashtag::decreasePostCount); // 해시태그 각각의 숫자 감소
-            // PostHashtag 레코드는 물리 삭제 (중간 테이블 완전 삭제)
-            postHashtagRepository.deleteAll(postHashtagRepository.findByPostId(postId));
+            hashtags.forEach(Hashtag::decreasePostCount);
+            postHashtagRepository.deleteAll(postHashtags);
         }
 
         post.softDelete();
@@ -155,20 +161,42 @@ public class PostService {
             }
         }
 
+        // null·blank 원소 필터링
         if (requestTags != null) {
             requestTags.stream()
-                    .map(String::toLowerCase)//소문자로 변환
-                    .forEach(tagNames::add);//빈 해시태그 값에 추가
+                    .filter(tag -> tag != null && !tag.isBlank())
+                    .map(tag -> tag.trim().toLowerCase())
+                    .forEach(tagNames::add);
+        }
+
+        if (tagNames.isEmpty()) return;
+
+        // N+1 → 배치 조회 후 없는 것만 saveAll
+        List<Hashtag> existing = hashtagRepository.findByNameIn(new ArrayList<>(tagNames));
+        Map<String, Hashtag> hashtagMap = existing.stream()
+                .collect(Collectors.toMap(Hashtag::getName, h -> h));
+
+        List<Hashtag> newHashtags = tagNames.stream()
+                .filter(name -> !hashtagMap.containsKey(name))
+                .map(name -> Hashtag.builder().name(name).build())
+                .collect(Collectors.toList());
+
+        if (!newHashtags.isEmpty()) {
+            try {
+                hashtagRepository.saveAll(newHashtags)
+                        .forEach(h -> hashtagMap.put(h.getName(), h));
+            } catch (DataIntegrityViolationException e) {
+                // 동시 삽입 충돌 시 이미 저장된 행 재조회
+                hashtagRepository.findByNameIn(
+                        newHashtags.stream().map(Hashtag::getName).toList()
+                ).forEach(h -> hashtagMap.put(h.getName(), h));
+            }
         }
 
         for (String tagName : tagNames) {
-            Hashtag hashtag = hashtagRepository.findByName(tagName)
-                    .orElseGet(() -> hashtagRepository.save(
-                            Hashtag.builder().name(tagName).build()
-                    ));
-            //카운트 증가
+            Hashtag hashtag = hashtagMap.get(tagName);
+            if (hashtag == null) continue;
             hashtag.increasePostCount();
-
             postHashtagRepository.save(PostHashtag.builder()
                     .postId(postId)
                     .hashtagId(hashtag.getHashtagId())

@@ -9,7 +9,9 @@ import java.util.Optional;
 public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
 
     Optional<Hashtag> findByName(String name);
-    // in절로 일괄조회
+    // 이름 목록으로 일괄 조회 (N+1 방지)
+    List<Hashtag> findByNameIn(List<String> names);
+    // ID 목록으로 일괄 조회
     List<Hashtag> findByHashtagIdIn(List<Long> hashtagIds);
 
 }

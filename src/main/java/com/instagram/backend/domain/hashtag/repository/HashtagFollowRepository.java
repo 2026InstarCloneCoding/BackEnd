@@ -1,7 +1,7 @@
 package com.instagram.backend.domain.hashtag.repository;
 
 import com.instagram.backend.domain.hashtag.entity.HashtagFollow;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

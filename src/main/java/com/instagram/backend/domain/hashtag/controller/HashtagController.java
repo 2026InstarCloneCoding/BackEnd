@@ -6,6 +6,7 @@ import com.instagram.backend.domain.hashtag.service.HashtagService;
 import com.instagram.backend.global.dto.ApiResponse;
 import com.instagram.backend.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,8 @@ public class HashtagController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long hashtagId) {
         hashtagFollowService.followHashtag(userDetails.getMemberId(), hashtagId);
-        return ResponseEntity.ok(ApiResponse.success(null, "해시태그 팔로우 완료"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(null, "해시태그 팔로우 완료"));
     }
 
     // 해시태그 언팔로우 — DELETE /api/hashtags/{hashtagId}/follow
