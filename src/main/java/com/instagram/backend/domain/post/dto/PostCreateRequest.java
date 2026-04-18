@@ -17,5 +17,5 @@ public class PostCreateRequest {
 
     private List<PostImageRequest> images;
 
-
+    private List<String> hashtags;
 }
