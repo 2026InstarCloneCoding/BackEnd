@@ -63,6 +63,7 @@ public enum ErrorCode {
     ALREADY_FOLLOWING(409, "이미 팔로우한 사용자입니다."),
     ALREADY_COMMENT_LIKED(409, "이미 좋아요한 댓글입니다."),
     ROOM_ALREADY_EXISTS(409, "이미 존재하는 채팅방입니다."),
+    ALREADY_HASHTAG_FOLLOWED(409, "이미 팔로우한 해시태그입니다."),
 
     // 500 - 서버 오류
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
