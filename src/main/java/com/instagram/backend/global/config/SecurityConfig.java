@@ -32,7 +32,8 @@ public class SecurityConfig {
             "/api/auth/refresh",
             "/api/auth/logout",
             "/actuator/health",
-            "/actuator/info"
+            "/actuator/info",
+            "/api/hashtags/**"
     };
 
     @Bean
