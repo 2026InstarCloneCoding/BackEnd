@@ -144,7 +144,7 @@ public class StoryService {
     }
 
     private Story findStory(Long storyId) {
-        return storyRepository.findByStoryIdAndIsDeletedFalse(storyId)
+        return storyRepository.findByStoryIdAndIsDeletedFalseAndExpiresAtAfter(storyId, LocalDateTime.now())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORY_NOT_FOUND));
     }
 
