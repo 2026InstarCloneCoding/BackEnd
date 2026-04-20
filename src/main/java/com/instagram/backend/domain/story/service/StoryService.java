@@ -11,6 +11,7 @@ import com.instagram.backend.domain.story.repository.StoryVisitorRepository;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,11 +63,15 @@ public class StoryService {
 
         if (!story.getMemberId().equals(memberId)) {
             if (!storyVisitorRepository.existsByStoryIdAndMemberId(storyId, memberId)) {
-                StoryVisitor visitor = StoryVisitor.builder()
-                        .storyId(storyId)
-                        .memberId(memberId)
-                        .build();
-                storyVisitorRepository.save(visitor);
+                try {
+                    StoryVisitor visitor = StoryVisitor.builder()
+                            .storyId(storyId)
+                            .memberId(memberId)
+                            .build();
+                    storyVisitorRepository.save(visitor);
+                } catch (DataIntegrityViolationException ignored) {
+                    // 동시 요청으로 인한 중복 삽입 — DB UNIQUE 제약이 이미 막아줌
+                }
             }
         }
 
