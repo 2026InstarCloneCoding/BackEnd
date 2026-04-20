@@ -70,7 +70,9 @@ public class StoryService {
                             .build();
                     storyVisitorRepository.save(visitor);
                 } catch (DataIntegrityViolationException ignored) {
-                    // 동시 요청으로 인한 중복 삽입 — DB UNIQUE 제약이 이미 막아줌
+                    // storyId는 findStory()에서, memberId는 JWT 인증에서 검증된 값이므로
+                    // 이 시점의 DataIntegrityViolationException은 레이스 컨디션으로 인한
+                    // UNIQUE 위반(story_id, member_id)만 해당 — 안전하게 무시
                 }
             }
         }
