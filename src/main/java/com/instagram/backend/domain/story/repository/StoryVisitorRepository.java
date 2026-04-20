@@ -10,4 +10,6 @@ public interface StoryVisitorRepository extends JpaRepository<StoryVisitor, Long
     boolean existsByStoryIdAndMemberId(Long storyId, Long memberId);
 
     List<StoryVisitor> findByStoryIdOrderByCreatedAtDesc(Long storyId);
+
+    void deleteAllByStoryId(Long storyId);
 }

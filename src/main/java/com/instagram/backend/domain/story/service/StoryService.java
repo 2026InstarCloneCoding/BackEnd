@@ -82,6 +82,7 @@ public class StoryService {
     public void deleteStory(Long memberId, Long storyId) {
         Story story = findStory(storyId);
         checkOwner(story, memberId);
+        storyVisitorRepository.deleteAllByStoryId(storyId);
         story.softDelete();
     }
 
