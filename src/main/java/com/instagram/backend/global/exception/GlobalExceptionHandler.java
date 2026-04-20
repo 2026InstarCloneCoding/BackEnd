@@ -42,7 +42,11 @@ public class GlobalExceptionHandler {
         if (annotationCode == null) return ErrorCode.MISSING_REQUIRED_FIELD.name();
         return switch (annotationCode) {
             case "Email" -> ErrorCode.INVALID_EMAIL_FORMAT.name();
-            case "Size", "Min" -> field.contains("assword") ? ErrorCode.INVALID_PASSWORD_FORMAT.name() : ErrorCode.MISSING_REQUIRED_FIELD.name();
+            case "Size", "Min" -> {
+                if (field.contains("assword")) yield ErrorCode.INVALID_PASSWORD_FORMAT.name();
+                if (field.contains("ontents")) yield ErrorCode.EXCEED_CONTENT_LENGTH.name();
+                yield ErrorCode.MISSING_REQUIRED_FIELD.name();
+            }
             case "Pattern" -> field.contains("sername") ? ErrorCode.INVALID_USERNAME_FORMAT.name() : ErrorCode.MISSING_REQUIRED_FIELD.name();
             default -> ErrorCode.MISSING_REQUIRED_FIELD.name();
         };
