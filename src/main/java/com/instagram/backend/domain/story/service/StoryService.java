@@ -94,7 +94,7 @@ public class StoryService {
             return List.of();
         }
 
-        List<Story> stories = storyRepository.findByMemberIdInAndIsDeletedFalseAndExpiresAtAfterOrderByCreatedAtDesc(followingIds, LocalDateTime.now());
+        List<Story> stories = storyRepository.findActiveStoriesByMembers(followingIds, LocalDateTime.now());
         if (stories.isEmpty()) {
             return List.of();
         }
@@ -147,7 +147,7 @@ public class StoryService {
     }
 
     private Story findStory(Long storyId) {
-        return storyRepository.findByStoryIdAndIsDeletedFalseAndExpiresAtAfter(storyId, LocalDateTime.now())
+        return storyRepository.findActiveStory(storyId, LocalDateTime.now())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORY_NOT_FOUND));
     }
 
