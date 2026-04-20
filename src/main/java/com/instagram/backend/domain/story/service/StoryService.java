@@ -91,7 +91,7 @@ public class StoryService {
             return List.of();
         }
 
-        List<Story> stories = storyRepository.findByMemberIdInAndIsDeletedFalseOrderByCreatedAtDesc(followingIds);
+        List<Story> stories = storyRepository.findByMemberIdInAndIsDeletedFalseAndExpiresAtAfterOrderByCreatedAtDesc(followingIds, LocalDateTime.now());
         if (stories.isEmpty()) {
             return List.of();
         }
