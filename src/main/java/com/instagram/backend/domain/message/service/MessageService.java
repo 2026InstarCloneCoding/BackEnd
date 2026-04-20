@@ -30,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -137,7 +138,8 @@ public class MessageService {
                     throw new BusinessException(ErrorCode.MISSING_MESSAGE_CONTENT);
                 }
                 // 명세서 상 "story_visitor_id"라는 이름을 쓰지만 실제 DB 참조는 story_id
-                sharedStory = storyRepository.findByStoryIdAndIsDeletedFalse(request.getStoryVisitorId())
+                sharedStory = storyRepository.findByStoryIdAndIsDeletedFalseAndExpiresAtAfter(
+                                request.getStoryVisitorId(), LocalDateTime.now())
                         .orElseThrow(() -> new BusinessException(ErrorCode.STORY_NOT_FOUND));
             }
             // default는 isValid 검증 이후라 도달 불가. 향후 enum 확장 시 안전장치
