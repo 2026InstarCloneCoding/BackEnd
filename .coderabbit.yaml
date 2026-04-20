@@ -1,0 +1,187 @@
+# CodeRabbit 설정 파일
+# 프로젝트: Instagram Clone (Spring Boot 3.4.3 / Java 21)
+
+language: "ko-KR"
+
+tone_instructions: |
+  리뷰는 한국어로 작성한다.
+  학습 목적의 캡스톤 프로젝트임을 감안해 이유와 개선 방향을 함께 설명한다.
+  致命的인 버그나 보안 이슈는 명확히 지적하고, 스타일 개선은 제안 수준으로 남긴다.
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai 요약"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "develop"
+
+  # 리뷰 제외 경로
+  path_filters:
+    - "!src/main/generated/**"   # QueryDSL Q클래스 자동 생성 파일
+    - "!build/**"
+    - "!gradle/**"
+    - "!.gradle/**"
+    - "!**/*.yml.example"
+
+  path_instructions:
+
+    # ─── Entity ───────────────────────────────────────────────────────────────
+    - path: "**/domain/**/entity/**/*.java"
+      instructions: |
+        JPA 엔티티 리뷰 기준:
+        - 모든 엔티티는 @NoArgsConstructor(access = AccessLevel.PROTECTED) + @Builder 패턴을 사용한다.
+        - PK는 GenerationType.IDENTITY 전략을 사용한다.
+        - 소프트 딜리트가 필요한 엔티티(post, comment, member, story, chat_room, message)는 BaseSoftDeleteEntity를 상속해야 한다.
+        - 생성/수정 시각만 필요한 엔티티는 BaseTimeEntity를 상속해야 한다.
+        - 관계 테이블(like, follow, bookmark 등)은 ID만 저장하는 방식을 사용한다. @ManyToOne을 쓰지 않는다.
+        - Post → Member처럼 조회 시 항상 함께 필요한 관계만 @ManyToOne(fetch = FetchType.LAZY)를 사용한다.
+        - 성능을 위해 비정규화한 카운트 필드(likeCount, followerCount 등)는 증감 메서드를 엔티티 내에 정의하고 0 미만 방어 코드를 포함해야 한다.
+        - public setter는 허용하지 않는다. 상태 변경은 의미 있는 메서드명(update, softDelete 등)으로 표현한다.
+
+    # ─── Global Entity ────────────────────────────────────────────────────────
+    - path: "**/global/entity/**/*.java"
+      instructions: |
+        공통 베이스 엔티티 리뷰 기준:
+        - BaseTimeEntity는 @EntityListeners(AuditingEntityListener.class)가 있어야 한다.
+        - BaseSoftDeleteEntity의 softDelete()는 isDeleted = true와 deletedAt = LocalDateTime.now()를 함께 설정해야 한다.
+        - @MappedSuperclass가 선언되어 있어야 한다.
+
+    # ─── Repository ───────────────────────────────────────────────────────────
+    - path: "**/repository/**/*.java"
+      instructions: |
+        Repository 리뷰 기준:
+        - 소프트 딜리트된 데이터를 제외하려면 메서드명에 AndIsDeletedFalse 조건을 포함해야 한다.
+        - 커서 기반 페이지네이션은 AndIdGreaterThan 또는 AndIdLessThan 조건과 Pageable 파라미터를 함께 사용한다.
+        - 메서드명으로 표현하기 어려운 IN 조건, 복잡한 조인은 @Query(JPQL)를 사용한다.
+          이때 필드명은 컬럼명이 아닌 Java 필드명 기준으로 작성해야 한다.
+        - N+1 방지를 위해 여러 ID를 한 번에 조회할 때는 findAllById() 또는 IN 쿼리를 사용한다.
+          루프 안에서 findById()를 반복 호출하는 코드는 반드시 지적한다.
+
+    # ─── Service ──────────────────────────────────────────────────────────────
+    - path: "**/service/**/*.java"
+      instructions: |
+        Service 리뷰 기준:
+        - 클래스 레벨에 @Transactional(readOnly = true)를 선언하고, 쓰기 메서드에만 @Transactional을 별도 선언하는 패턴을 사용한다.
+          쓰기 메서드에 @Transactional이 누락된 경우 반드시 지적한다.
+        - 입력 검증 순서: ① 값 자체 유효성(null, 길이) → ② DB 존재 여부 → ③ 비즈니스 규칙 순서로 검증한다.
+        - 권한 체크는 조회 직후 즉시 수행한다. 권한 없는 사용자가 데이터를 가공하는 코드가 없어야 한다.
+        - N+1 방지: 루프 안에서 Repository 메서드를 반복 호출하는 코드는 지적한다.
+          ID 수집 → findAllById() → Map 변환 패턴을 권장한다.
+        - 커서 기반 페이지네이션은 size+1 조회 후 subList(0, size) 패턴을 사용한다.
+        - 예외는 반드시 BusinessException(ErrorCode.XXX) 형태로 던져야 한다. 직접 new RuntimeException()을 쓰지 않는다.
+        - @ManyToOne LAZY 관계(Post → Member 등)를 @Transactional 밖에서 접근하면 LazyInitializationException이 발생한다. 확인한다.
+        - Hibernate LAZY 프록시에서 getMemberId() 대신 getId()를 호출하면 프록시 위임 오류가 발생할 수 있다.
+          Member 엔티티 접근 시 getMemberId() wrapper 메서드를 사용한다.
+
+    # ─── Controller ───────────────────────────────────────────────────────────
+    - path: "**/controller/**/*.java"
+      instructions: |
+        Controller 리뷰 기준:
+        - 모든 응답은 ApiResponse<T> 래퍼를 사용해야 한다. ResponseEntity<T> 단독 사용은 허용하지 않는다.
+        - 인증이 필요한 엔드포인트는 @AuthenticationPrincipal CustomUserDetails userDetails 파라미터를 선언해야 한다.
+        - memberId는 토큰에서 꺼내 사용한다. userDetails.getMemberId()를 통해 얻는다. Request Body로 받지 않는다.
+        - 생성 API는 201 Created, 조회/수정/삭제는 200 OK를 반환한다.
+        - 비즈니스 로직이 Controller에 포함되면 안 된다. Service에 위임해야 한다.
+        - @RequestMapping을 클래스 레벨에 선언해 공통 경로를 추출하는 것을 권장한다.
+
+    # ─── Request DTO ──────────────────────────────────────────────────────────
+    - path: "**/dto/**/request/**/*.java"
+      instructions: |
+        Request DTO 리뷰 기준:
+        - application.yml에 spring.jackson.property-naming-strategy: SNAKE_CASE가 설정되어 있다.
+          camelCase 필드명은 자동으로 snake_case JSON 키와 매핑되므로 @JsonProperty를 중복 선언하지 않는다.
+        - 역직렬화를 위해 @NoArgsConstructor가 있어야 한다.
+        - @Getter가 있어야 한다.
+        - @Valid + Bean Validation 어노테이션(@NotBlank, @Size 등) 사용을 권장한다.
+          서비스 코드에서 직접 null/length 체크를 하는 경우 Bean Validation으로 개선을 제안한다.
+
+    # ─── Response DTO ─────────────────────────────────────────────────────────
+    - path: "**/dto/**/response/**/*.java"
+      instructions: |
+        Response DTO 리뷰 기준:
+        - 직렬화 전용이므로 @Getter만 있으면 된다. @Setter는 필요 없다.
+        - 정적 팩토리 메서드(of, from)를 사용해 엔티티 → DTO 변환 로직을 DTO 내부에 캡슐화한다.
+        - null 필드를 JSON에서 제외하려면 @JsonInclude(NON_NULL)을 활용한다.
+        - 여러 DTO에서 동일한 MemberInfo, ImageInfo 등 내부 클래스가 중복 선언되는 경우 공통 DTO 분리를 제안한다.
+        - SNAKE_CASE 전략이 적용되므로 camelCase 필드명이 자동으로 변환된다.
+
+    # ─── Exception ────────────────────────────────────────────────────────────
+    - path: "**/global/exception/**/*.java"
+      instructions: |
+        예외 처리 리뷰 기준:
+        - 새 에러 케이스는 ErrorCode enum에 추가해야 한다. 에러 메시지를 하드코딩하면 안 된다.
+        - ErrorCode enum에 상수를 추가할 때는 마지막 항목인 INTERNAL_SERVER_ERROR 앞에 삽입해야 한다.
+          세미콜론(;) 뒤에 추가하면 컴파일 에러가 발생한다.
+        - HTTP 상태코드와 에러코드 메시지의 맥락이 일치하는지 확인한다.
+          예: 댓글 삭제 권한 없음에 "본인의 게시물만 수정/삭제할 수 있습니다." 메시지를 쓰면 안 된다.
+        - GlobalExceptionHandler는 BusinessException, MethodArgumentNotValidException, Exception 세 가지를 처리한다.
+          새 예외 타입을 추가할 때 이 핸들러에 등록되었는지 확인한다.
+
+    # ─── Security ─────────────────────────────────────────────────────────────
+    - path: "**/global/security/**/*.java"
+      instructions: |
+        보안 리뷰 기준:
+        - JWT 토큰은 Authorization: Bearer {token} 헤더로만 전달받는다. 쿼리 파라미터나 바디로 받으면 안 된다.
+        - JwtAuthenticationFilter에서 access 타입 토큰이 아닌 경우(refresh 등)는 반드시 거부해야 한다.
+        - 비밀번호는 BCryptPasswordEncoder로만 인코딩해야 한다. 평문 저장은 절대 허용하지 않는다.
+        - SecurityConfig의 PUBLIC_URLS 외 모든 경로는 인증이 필요해야 한다.
+        - CustomUserDetails에서 memberId를 직접 저장해 DB 조회 없이 인증 정보를 사용한다.
+          인증 필터에서 불필요한 DB 조회가 발생하지 않는지 확인한다.
+
+    # ─── Config ───────────────────────────────────────────────────────────────
+    - path: "**/global/config/**/*.java"
+      instructions: |
+        설정 파일 리뷰 기준:
+        - DataInitializer는 @Profile("local")이 있어야 한다. 프로덕션 환경에서 테스트 데이터가 생성되면 안 된다.
+        - SecurityConfig에서 CSRF는 REST API이므로 비활성화가 맞다. 세션은 STATELESS여야 한다.
+        - 새로운 공개 URL을 추가할 때 SecurityConfig의 PUBLIC_URLS에도 등록되어야 한다.
+
+    # ─── 테스트 ───────────────────────────────────────────────────────────────
+    - path: "src/test/**/*.java"
+      instructions: |
+        테스트 리뷰 기준:
+        - @SpringBootTest는 통합 테스트에만 사용한다. 단위 테스트는 @ExtendWith(MockitoExtension.class)를 사용한다.
+        - Testcontainers(MySQL)를 활용한 실제 DB 연동 테스트를 권장한다.
+        - 테스트 메서드명은 한국어 또는 영어로 테스트 의도를 명확히 표현한다.
+        - given/when/then 구조를 권장한다.
+
+    # ─── 설정 파일 ────────────────────────────────────────────────────────────
+    - path: "src/main/resources/**/*.yml"
+      instructions: |
+        설정 파일 리뷰 기준:
+        - JWT 시크릿, AWS 키, DB 패스워드 등 민감 정보는 ${ENV_VAR} 형태로 환경변수를 참조해야 한다. 하드코딩하면 안 된다.
+        - application-prod.yml에 민감 정보가 직접 기입되어 있으면 반드시 지적한다.
+        - spring.jpa.open-in-view는 false여야 한다.
+
+    # ─── Dockerfile / docker-compose ─────────────────────────────────────────
+    - path: "Dockerfile"
+      instructions: |
+        - 베이스 이미지는 경량 이미지(eclipse-temurin:21-jre-alpine 등)를 사용하는지 확인한다.
+        - 민감 정보(비밀번호, 시크릿 키)가 ENV나 ARG로 하드코딩되어 있으면 지적한다.
+
+    - path: "docker-compose.yml"
+      instructions: |
+        - DB 비밀번호, JWT 시크릿 등 민감 정보가 하드코딩되어 있으면 .env 파일 참조로 개선을 제안한다.
+        - 서비스 간 depends_on 및 healthcheck 설정이 있는지 확인한다.
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "local"
+  pull_requests:
+    scope: "local"
