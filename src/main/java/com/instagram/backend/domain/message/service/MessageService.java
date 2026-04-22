@@ -139,7 +139,7 @@ public class MessageService {
                     throw new BusinessException(ErrorCode.MISSING_MESSAGE_CONTENT);
                 }
                 // 명세서 상 "story_visitor_id"라는 이름을 쓰지만 실제 DB 참조는 story_id
-                sharedStory = storyRepository.findByStoryIdAndIsDeletedFalseAndExpiresAtAfter(
+                sharedStory = storyRepository.findActiveStory(
                                 request.getStoryVisitorId(), LocalDateTime.now())
                         .orElseThrow(() -> new BusinessException(ErrorCode.STORY_NOT_FOUND));
             }
