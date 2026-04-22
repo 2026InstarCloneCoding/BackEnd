@@ -52,6 +52,7 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(404, "존재하지 않는 댓글입니다."),
     COMMENT_LIKE_NOT_FOUND(404, "댓글 좋아요 내역이 존재하지 않습니다."),
     ROOM_NOT_FOUND(404, "존재하지 않는 채팅방입니다."),
+    MESSAGE_NOT_FOUND(404, "존재하지 않는 메시지입니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
