@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_GENDER_VALUE(400, "성별 값이 올바르지 않습니다. (MALE/FEMALE/OTHER)"),
     INVALID_IMAGE_TYPE(400, "지원하지 않는 이미지 형식입니다."),
     EXCEED_COMMENT_LENGTH(400, "댓글 내용은 500자 이내로 입력해주세요."),
+    INVALID_SEARCH_QUERY(400, "검색어는 1자 이상 입력해주세요."),
     INVALID_DTYPE(400, "올바르지 않은 메시지 타입입니다."),
     MISSING_MESSAGE_CONTENT(400, "메시지 내용을 입력해주세요."),
 
