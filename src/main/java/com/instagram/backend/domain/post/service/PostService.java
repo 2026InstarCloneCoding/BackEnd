@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -35,7 +36,7 @@ public class PostService {
 
     // 게시물 단건 조회
     public PostResponse getPost(Long memberId, Long postId) {
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+        Post post = postRepository.findByPostIdWithMemberAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         List<PostImage> images = postImageRepository.findByPostPostIdOrderBySortOrderAsc(postId);
@@ -57,10 +58,6 @@ public class PostService {
         if (request.getImages().size() > 10) {
             throw new BusinessException(ErrorCode.EXCEED_IMAGE_LIMIT);
         }
-        // 내용 2200자 초과 검증
-        if (request.getPostContents() != null && request.getPostContents().length() > 2200) {
-            throw new BusinessException(ErrorCode.EXCEED_CONTENT_LENGTH);
-        }
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -74,9 +71,10 @@ public class PostService {
         postRepository.save(post);
 
         // 이미지 저장
+        List<PostImage> images = new ArrayList<>();
         for (int i = 0; i < request.getImages().size(); i++) {
             var imageReq = request.getImages().get(i);
-            PostImage postImage = PostImage.builder()
+            images.add(PostImage.builder()
                     .post(post)
                     .imageUrl(imageReq.getPostImageUrl())
                     .imageType(imageReq.getPostImageType())
@@ -84,9 +82,9 @@ public class PostService {
                     .imageUuid(imageReq.getPostImageUuid())
                     .altText(imageReq.getPostImageAltText())
                     .sortOrder(i)
-                    .build();
-            postImageRepository.save(postImage);
+                    .build());
         }
+        postImageRepository.saveAll(images);
 
         return PostCreateResponse.from(post);
     }
@@ -94,33 +92,26 @@ public class PostService {
     // 게시물 수정
     @Transactional
     public void updatePost(Long memberId, Long postId, PostUpdateRequest request) {
-        // 내용 2200자 초과 검증
-        if (request.getPostContents() != null && request.getPostContents().length() > 2200) {
-            throw new BusinessException(ErrorCode.EXCEED_CONTENT_LENGTH);
-        }
-
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+        Post post = postRepository.findByPostIdWithMemberAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        // 본인 게시물인지 확인
-        if (!post.getMember().getMemberId().equals(memberId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN);
-        }
-
+        validatePostOwner(post, memberId);
         post.update(request.getPostContents(), request.isCommentEnabled());
     }
 
     // 게시물 삭제 (소프트 딜리트)
     @Transactional
     public void deletePost(Long memberId, Long postId) {
-        Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
+        Post post = postRepository.findByPostIdWithMemberAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        // 본인 게시물인지 확인
+        validatePostOwner(post, memberId);
+        post.softDelete();
+    }
+
+    private void validatePostOwner(Post post, Long memberId) {
         if (!post.getMember().getMemberId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
-
-        post.softDelete();
     }
 }

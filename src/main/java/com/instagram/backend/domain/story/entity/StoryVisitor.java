@@ -8,7 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "story_visitors")
+@Table(
+        name = "story_visitors",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"story_id", "member_id"})
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StoryVisitor extends BaseTimeEntity {

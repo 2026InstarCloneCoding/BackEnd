@@ -11,6 +11,7 @@ import com.instagram.backend.domain.story.repository.StoryVisitorRepository;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,11 +63,17 @@ public class StoryService {
 
         if (!story.getMemberId().equals(memberId)) {
             if (!storyVisitorRepository.existsByStoryIdAndMemberId(storyId, memberId)) {
-                StoryVisitor visitor = StoryVisitor.builder()
-                        .storyId(storyId)
-                        .memberId(memberId)
-                        .build();
-                storyVisitorRepository.save(visitor);
+                try {
+                    StoryVisitor visitor = StoryVisitor.builder()
+                            .storyId(storyId)
+                            .memberId(memberId)
+                            .build();
+                    storyVisitorRepository.save(visitor);
+                } catch (DataIntegrityViolationException ignored) {
+                    // storyId는 findStory()에서, memberId는 JWT 인증에서 검증된 값이므로
+                    // 이 시점의 DataIntegrityViolationException은 레이스 컨디션으로 인한
+                    // UNIQUE 위반(story_id, member_id)만 해당 — 안전하게 무시
+                }
             }
         }
 
@@ -77,6 +84,7 @@ public class StoryService {
     public void deleteStory(Long memberId, Long storyId) {
         Story story = findStory(storyId);
         checkOwner(story, memberId);
+        storyVisitorRepository.deleteAllByStoryId(storyId);
         story.softDelete();
     }
 
@@ -86,7 +94,7 @@ public class StoryService {
             return List.of();
         }
 
-        List<Story> stories = storyRepository.findByMemberIdInAndIsDeletedFalseOrderByCreatedAtDesc(followingIds);
+        List<Story> stories = storyRepository.findActiveStoriesByMembers(followingIds, LocalDateTime.now());
         if (stories.isEmpty()) {
             return List.of();
         }
@@ -139,7 +147,7 @@ public class StoryService {
     }
 
     private Story findStory(Long storyId) {
-        return storyRepository.findByStoryIdAndIsDeletedFalse(storyId)
+        return storyRepository.findActiveStory(storyId, LocalDateTime.now())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORY_NOT_FOUND));
     }
 
