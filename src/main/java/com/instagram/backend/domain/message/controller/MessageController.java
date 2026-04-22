@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -98,6 +99,35 @@ public class MessageController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(response, "메시지 목록 조회에 성공하였습니다.")
+        );
+    }
+
+    /*
+      PATCH /api/chats/{roomId}/messages/{messageId}/read — 메시지 읽음 처리
+
+      동작:
+        — chat_room_members.last_read_message_id를 해당 messageId로 갱신
+        — 이 값은 GET /api/chats 의 unread_count 계산에 사용됨
+        — 이미 더 최신 메시지를 읽은 상태면 값이 되돌아가지 않음 (방어 로직 내장)
+
+      응답:
+        — 200 OK + 성공 메시지만 반환 (data 없음)
+        — 읽음 처리는 부수효과(side effect)이므로 별도 응답 데이터가 필요 없음
+    */
+    @PatchMapping("/{messageId}/read")
+    public ResponseEntity<ApiResponse<Void>> markAsRead(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long roomId,
+            @PathVariable Long messageId) {
+
+        if (userDetails == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        messageService.markAsRead(userDetails.getMemberId(), roomId, messageId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "메시지를 읽음 처리하였습니다.")
         );
     }
 }

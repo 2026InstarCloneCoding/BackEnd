@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class PostController {
     @PostMapping
     public ResponseEntity<ApiResponse<PostCreateResponse>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody PostCreateRequest request) {
+            @Valid @RequestBody PostCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.success(postService.createPost(userDetails.getMemberId(), request), "게시물이 등록되었습니다.")
         );
@@ -49,7 +51,7 @@ public class PostController {
     public ResponseEntity<ApiResponse<Void>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
-            @RequestBody PostUpdateRequest request) {
+            @Valid @RequestBody PostUpdateRequest request) {
         postService.updatePost(userDetails.getMemberId(), postId, request);
         return ResponseEntity.ok(
                 ApiResponse.success(null, "게시물이 수정되었습니다.")

@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
 
@@ -73,4 +74,13 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
           ) = 2
         """)
     List<Long> findDmRoomIdBetween(@Param("myId") Long myId, @Param("otherId") Long otherId);
+
+    /*
+      특정 채팅방에서 특정 유저의 ChatRoomMember 엔티티 조회
+
+      목적: 읽음 처리 API에서 lastReadMessageId 갱신을 위해 엔티티가 필요
+        — existsBy...는 존재 여부만 반환하므로 엔티티를 수정할 수 없음
+        — 이 메서드로 엔티티를 가져와서 updateLastReadMessageId()를 호출한 뒤 dirty checking으로 저장
+    */
+    Optional<ChatRoomMember> findByChatRoomIdAndMemberId(Long chatRoomId, Long memberId);
 }
