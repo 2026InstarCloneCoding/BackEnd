@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,4 +68,15 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     // 내가 팔로우하는 사람들의 memberId 목록 조회 (스토리 피드용)
     @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :followerId")
     List<Long> findFollowingIdsByFollowerId(@Param("followerId") Long followerId);
+
+    /*
+      특정 대상 목록 중 내가 팔로우하고 있는 memberId만 반환 (배치 조회)
+
+      목적: 유저 검색 결과에 is_following 필드를 채울 때 N+1 회피
+        — existsByFollowerIdAndFollowingId()를 결과 수만큼 호출하는 대신
+          한 번의 IN 쿼리로 팔로우 중인 ID만 가져옴
+        — 반환된 Set에 포함 여부로 is_following 판단
+    */
+    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :myId AND f.followingId IN :targetIds")
+    List<Long> findFollowingIdsAmong(@Param("myId") Long myId, @Param("targetIds") Collection<Long> targetIds);
 }
