@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.post.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.post.entity.Post;
 import com.instagram.backend.domain.post.entity.PostLike;
 import com.instagram.backend.domain.post.repository.PostLikeRepository;
@@ -17,6 +19,7 @@ public class PostLikeService {
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final AlarmService alarmService;
 
     //좋아요 up
     @Transactional
@@ -32,7 +35,9 @@ public class PostLikeService {
                 .memberId((memberId))
                 .build()); // 좋아요 기록 저장
 
-        post.increaseLikeCount();//게시물의 좋아요 카운트 up
+        post.increaseLikeCount();
+
+        alarmService.createAlarm(Alarm.ofPostLike(post.getMember().getMemberId(), memberId, postId));
     }
 
     //좋아요 캔슬
