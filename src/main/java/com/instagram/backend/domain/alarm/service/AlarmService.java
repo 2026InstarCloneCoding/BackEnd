@@ -33,18 +33,30 @@ public class AlarmService {
     }
 
     public CursorPageResponse<AlarmResponse> getAlarms(Long memberId, String cursor, int limit) {
+        if (limit <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_LIMIT);
+        }
+
         PageRequest pageRequest = PageRequest.of(0, limit + 1);
         List<Alarm> alarms;
 
-        if (cursor == null) {
+        if (cursor == null || cursor.isBlank()) {
             alarms = alarmRepository.findByTargetMemberIdOrderByAlarmIdDesc(memberId, pageRequest);
         } else {
-            alarms = alarmRepository.findByTargetMemberIdAndAlarmIdLessThanOrderByAlarmIdDesc(
-                    memberId, Long.parseLong(cursor), pageRequest);
+            try {
+                alarms = alarmRepository.findByTargetMemberIdAndAlarmIdLessThanOrderByAlarmIdDesc(
+                        memberId, Long.parseLong(cursor), pageRequest);
+            } catch (NumberFormatException e) {
+                throw new BusinessException(ErrorCode.INVALID_CURSOR);
+            }
         }
 
         boolean hasNext = alarms.size() > limit;
         List<Alarm> result = hasNext ? alarms.subList(0, limit) : alarms;
+
+        if (result.isEmpty()) {
+            return CursorPageResponse.of(List.of(), null, false);
+        }
 
         Set<Long> senderIds = result.stream()
                 .map(Alarm::getSenderMemberId)
