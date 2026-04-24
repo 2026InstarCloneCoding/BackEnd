@@ -91,7 +91,10 @@ public class Alarm extends BaseTimeEntity {
                 .build();
     }
 
+    // 최초 읽음 시각을 보존 — 중복 호출 시 덮어쓰지 않음
     public void markAsRead() {
-        this.readAt = LocalDateTime.now();
+        if (this.readAt == null) {
+            this.readAt = LocalDateTime.now();
+        }
     }
 }
