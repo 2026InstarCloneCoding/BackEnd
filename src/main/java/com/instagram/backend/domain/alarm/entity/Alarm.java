@@ -1,5 +1,6 @@
 package com.instagram.backend.domain.alarm.entity;
 
+import com.instagram.backend.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -7,35 +8,93 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "alarms")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Alarm {
+public class Alarm extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long alarmId;
 
-    private Long followId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AlarmType alarmType;
 
-    private Long postlikeId;
+    @Column(nullable = false)
+    private Long targetMemberId;
 
-    private Long commentId;
+    @Column(nullable = false)
+    private Long senderMemberId;
 
-    private Long commentlikeId;
+    private Long referenceId;
+
+    private Long secondaryReferenceId;
 
     private LocalDateTime readAt;
 
-    private Boolean isDeleted;
-
     @Builder
-    public Alarm(Long followId, Long postlikeId, Long commentId, Long commentlikeId) {
-        this.followId = followId;
-        this.postlikeId = postlikeId;
-        this.commentId = commentId;
-        this.commentlikeId = commentlikeId;
-        this.isDeleted = false;
+    private Alarm(AlarmType alarmType, Long targetMemberId, Long senderMemberId,
+                  Long referenceId, Long secondaryReferenceId) {
+        Objects.requireNonNull(alarmType, "alarmType must not be null");
+        Objects.requireNonNull(targetMemberId, "targetMemberId must not be null");
+        Objects.requireNonNull(senderMemberId, "senderMemberId must not be null");
+        this.alarmType = alarmType;
+        this.targetMemberId = targetMemberId;
+        this.senderMemberId = senderMemberId;
+        this.referenceId = referenceId;
+        this.secondaryReferenceId = secondaryReferenceId;
+    }
+
+    public static Alarm ofFollow(Long targetMemberId, Long senderMemberId) {
+        return Alarm.builder()
+                .alarmType(AlarmType.FOLLOW)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .build();
+    }
+
+    public static Alarm ofPostLike(Long targetMemberId, Long senderMemberId, Long postId) {
+        Objects.requireNonNull(postId, "postId must not be null for POST_LIKE");
+        return Alarm.builder()
+                .alarmType(AlarmType.POST_LIKE)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(postId)
+                .build();
+    }
+
+    public static Alarm ofComment(Long targetMemberId, Long senderMemberId, Long commentId, Long postId) {
+        Objects.requireNonNull(commentId, "commentId must not be null for COMMENT");
+        Objects.requireNonNull(postId, "postId must not be null for COMMENT");
+        return Alarm.builder()
+                .alarmType(AlarmType.COMMENT)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(commentId)
+                .secondaryReferenceId(postId)
+                .build();
+    }
+
+    public static Alarm ofCommentLike(Long targetMemberId, Long senderMemberId, Long commentId, Long postId) {
+        Objects.requireNonNull(commentId, "commentId must not be null for COMMENT_LIKE");
+        Objects.requireNonNull(postId, "postId must not be null for COMMENT_LIKE");
+        return Alarm.builder()
+                .alarmType(AlarmType.COMMENT_LIKE)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(commentId)
+                .secondaryReferenceId(postId)
+                .build();
+    }
+
+    // 최초 읽음 시각을 보존 — 중복 호출 시 덮어쓰지 않음
+    public void markAsRead() {
+        if (this.readAt == null) {
+            this.readAt = LocalDateTime.now();
+        }
     }
 }

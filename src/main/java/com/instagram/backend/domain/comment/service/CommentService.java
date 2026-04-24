@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.comment.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.comment.dto.request.CommentCreateRequest;
 import com.instagram.backend.domain.comment.dto.response.CommentCreateResponse;
 import com.instagram.backend.domain.comment.dto.response.CommentListResponse;
@@ -29,6 +31,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
+    private final AlarmService alarmService;
 
     //댓글 생성
     @Transactional
@@ -63,6 +66,7 @@ public class CommentService {
                 .commentContent(request.getCommentContent())
                 .build();
         commentRepository.save(comment);
+        alarmService.createAlarm(Alarm.ofComment(post.getMember().getMemberId(), memberId, comment.getCommentId(), postId));
         return CommentCreateResponse.of(comment,member);
     }
     //댓글 삭제

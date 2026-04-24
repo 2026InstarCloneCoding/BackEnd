@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.comment.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.comment.entity.Comment;
 import com.instagram.backend.domain.comment.entity.CommentLike;
 import com.instagram.backend.domain.comment.repository.CommentLikeRepository;
@@ -20,6 +22,7 @@ public class CommentLikeService {
     private final CommentLikeRepository commentLikeRepository;
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final AlarmService alarmService;
 
     private void validateIds(Long memberId, Long postId, Long commentId) {
         if (memberId == null || postId == null || commentId == null) {
@@ -56,6 +59,8 @@ public class CommentLikeService {
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.ALREADY_COMMENT_LIKED);
         }
+
+        alarmService.createAlarm(Alarm.ofCommentLike(comment.getMemberId(), memberId, commentId, comment.getPostId()));
 
         // 원자적 UPDATE — 0건이면 댓글이 삭제됐거나 경합 발생 → 롤백
         int updated = commentRepository.incrementLikeCountAndIsDeletedFalse(commentId);

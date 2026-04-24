@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.follow.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.follow.dto.FollowListResponse;
 import com.instagram.backend.domain.follow.entity.Follow;
 import com.instagram.backend.domain.follow.repository.FollowRepository;
@@ -36,6 +38,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final MemberRepository memberRepository;
+    private final AlarmService alarmService;
 
     /*
       팔로우
@@ -78,6 +81,8 @@ public class FollowService {
         // 5. 양쪽 카운트 업데이트 (dirty checking으로 자동 UPDATE)
         me.incrementFollowingCount();
         target.incrementFollowerCount();
+
+        alarmService.createAlarm(Alarm.ofFollow(targetMemberId, myMemberId));
     }
 
     /*
