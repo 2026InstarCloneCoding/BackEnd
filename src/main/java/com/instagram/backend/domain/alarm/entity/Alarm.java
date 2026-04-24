@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "alarms")
@@ -38,6 +39,9 @@ public class Alarm extends BaseTimeEntity {
     @Builder
     private Alarm(AlarmType alarmType, Long targetMemberId, Long senderMemberId,
                   Long referenceId, Long secondaryReferenceId) {
+        Objects.requireNonNull(alarmType, "alarmType must not be null");
+        Objects.requireNonNull(targetMemberId, "targetMemberId must not be null");
+        Objects.requireNonNull(senderMemberId, "senderMemberId must not be null");
         this.alarmType = alarmType;
         this.targetMemberId = targetMemberId;
         this.senderMemberId = senderMemberId;
@@ -54,6 +58,7 @@ public class Alarm extends BaseTimeEntity {
     }
 
     public static Alarm ofPostLike(Long targetMemberId, Long senderMemberId, Long postId) {
+        Objects.requireNonNull(postId, "postId must not be null for POST_LIKE");
         return Alarm.builder()
                 .alarmType(AlarmType.POST_LIKE)
                 .targetMemberId(targetMemberId)
@@ -63,6 +68,8 @@ public class Alarm extends BaseTimeEntity {
     }
 
     public static Alarm ofComment(Long targetMemberId, Long senderMemberId, Long commentId, Long postId) {
+        Objects.requireNonNull(commentId, "commentId must not be null for COMMENT");
+        Objects.requireNonNull(postId, "postId must not be null for COMMENT");
         return Alarm.builder()
                 .alarmType(AlarmType.COMMENT)
                 .targetMemberId(targetMemberId)
@@ -73,6 +80,8 @@ public class Alarm extends BaseTimeEntity {
     }
 
     public static Alarm ofCommentLike(Long targetMemberId, Long senderMemberId, Long commentId, Long postId) {
+        Objects.requireNonNull(commentId, "commentId must not be null for COMMENT_LIKE");
+        Objects.requireNonNull(postId, "postId must not be null for COMMENT_LIKE");
         return Alarm.builder()
                 .alarmType(AlarmType.COMMENT_LIKE)
                 .targetMemberId(targetMemberId)
