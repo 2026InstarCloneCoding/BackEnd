@@ -38,6 +38,7 @@ public enum ErrorCode {
     COMMENT_DISABLED(403, "댓글이 허용되지 않는 게시물입니다."),
     COMMENT_FORBIDDEN(403, "댓글 작성자 또는 게시물 주인만 삭제할 수 있습니다."),
     CHAT_ROOM_FORBIDDEN(403, "해당 채팅방에 접근 권한이 없습니다."),
+    ALARM_ACCESS_DENIED(403, "접근 권한이 없는 알림입니다."),
 
     CANNOT_FOLLOW_SELF(400, "자기 자신을 팔로우할 수 없습니다."),
     SELF_CHAT_NOT_ALLOWED(400, "자기 자신과 채팅방을 만들 수 없습니다."),
@@ -53,7 +54,6 @@ public enum ErrorCode {
     COMMENT_LIKE_NOT_FOUND(404, "댓글 좋아요 내역이 존재하지 않습니다."),
     ROOM_NOT_FOUND(404, "존재하지 않는 채팅방입니다."),
     ALARM_NOT_FOUND(404, "존재하지 않는 알림입니다."),
-    ALARM_ACCESS_DENIED(403, "접근 권한이 없는 알림입니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
