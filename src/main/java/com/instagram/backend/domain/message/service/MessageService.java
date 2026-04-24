@@ -1,5 +1,6 @@
 package com.instagram.backend.domain.message.service;
 
+import com.instagram.backend.domain.chat.entity.ChatRoomMember;
 import com.instagram.backend.domain.chat.repository.ChatRoomMemberRepository;
 import com.instagram.backend.domain.chat.repository.ChatRoomRepository;
 import com.instagram.backend.domain.member.entity.Member;
@@ -138,7 +139,7 @@ public class MessageService {
                     throw new BusinessException(ErrorCode.MISSING_MESSAGE_CONTENT);
                 }
                 // 명세서 상 "story_visitor_id"라는 이름을 쓰지만 실제 DB 참조는 story_id
-                sharedStory = storyRepository.findByStoryIdAndIsDeletedFalseAndExpiresAtAfter(
+                sharedStory = storyRepository.findActiveStory(
                                 request.getStoryVisitorId(), LocalDateTime.now())
                         .orElseThrow(() -> new BusinessException(ErrorCode.STORY_NOT_FOUND));
             }
@@ -299,6 +300,50 @@ public class MessageService {
                 : null;
 
         return CursorPageResponse.of(content, nextCursor, hasNext);
+    }
+
+    /*
+      메시지 읽음 처리 — PATCH /api/chats/{roomId}/messages/{messageId}/read
+
+      처리 순서:
+        1) 방 존재 + 참여자 검증 (validateRoomAndParticipant는 existsBy로만 확인하므로,
+           여기서는 findBy로 엔티티를 가져와야 lastReadMessageId 갱신이 가능)
+        2) 메시지 존재 + 해당 방 소속 검증
+        3) ChatRoomMember.lastReadMessageId 갱신 (dirty checking으로 자동 UPDATE)
+
+      왜 validateRoomAndParticipant()를 재사용하지 않나?
+        — validateRoomAndParticipant는 existsBy로 존재 여부만 확인
+        — 읽음 처리는 ChatRoomMember 엔티티의 필드를 수정해야 하므로 findBy로 가져와야 함
+        — 방 존재 검증은 그대로 재사용하고, 참여자 조회만 findBy로 교체
+
+      과거 메시지 방어:
+        — ChatRoomMember.updateLastReadMessageId() 내부에서
+          현재 값보다 작은 messageId는 무시하므로 별도 검증 불필요
+    */
+    @Transactional
+    public void markAsRead(Long myMemberId, Long roomId, Long messageId) {
+        // 1) 방 존재 검증 (소프트 삭제된 방 차단)
+        //    — 아래 findByChatRoomIdAndMemberId만으로도 참여자 부재를 잡을 수 있지만,
+        //      소프트 삭제된 방의 ChatRoomMember 레코드는 남아 있을 수 있으므로
+        //      방 자체의 is_deleted 상태를 먼저 확인해야 정확한 404를 보장함
+        chatRoomRepository.findByChatRoomIdAndIsDeletedFalse(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+        // 2) 참여자 검증 + 엔티티 획득 (lastReadMessageId 갱신용)
+        ChatRoomMember membership = chatRoomMemberRepository
+                .findByChatRoomIdAndMemberId(roomId, myMemberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_ROOM_FORBIDDEN));
+
+        // 3) 메시지 존재 + 해당 방 소속 검증
+        //    — 다른 방의 messageId를 보내면 chatRoomId 불일치로 MESSAGE_NOT_FOUND 처리
+        Message message = messageRepository.findByMessageIdAndIsDeletedFalse(messageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MESSAGE_NOT_FOUND));
+        if (!message.getChatRoomId().equals(roomId)) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_FOUND);
+        }
+
+        // 4) lastReadMessageId 갱신 — dirty checking으로 트랜잭션 커밋 시 자동 UPDATE
+        membership.updateLastReadMessageId(messageId);
     }
 
     // ===== private helpers =====

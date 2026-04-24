@@ -59,4 +59,13 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     */
     List<Message> findByChatRoomIdAndIsDeletedFalseAndMessageIdLessThanOrderByMessageIdDesc(
             Long chatRoomId, Long cursor, Pageable pageable);
+
+    /*
+      단건 메시지 조회 (소프트 삭제 제외)
+
+      목적: 읽음 처리 API에서 해당 메시지가 실제로 존재하는지 검증
+        — findById(Long)은 소프트 삭제된 메시지도 반환하므로
+          프로젝트 전반의 "findByXxxIdAndIsDeletedFalse" 패턴을 따름
+    */
+    Optional<Message> findByMessageIdAndIsDeletedFalse(Long messageId);
 }

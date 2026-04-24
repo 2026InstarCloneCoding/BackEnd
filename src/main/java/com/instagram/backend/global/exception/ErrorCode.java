@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_GENDER_VALUE(400, "성별 값이 올바르지 않습니다. (MALE/FEMALE/OTHER)"),
     INVALID_IMAGE_TYPE(400, "지원하지 않는 이미지 형식입니다."),
     EXCEED_COMMENT_LENGTH(400, "댓글 내용은 500자 이내로 입력해주세요."),
+    INVALID_SEARCH_QUERY(400, "검색어는 1자 이상 입력해주세요."),
     INVALID_DTYPE(400, "올바르지 않은 메시지 타입입니다."),
     MISSING_MESSAGE_CONTENT(400, "메시지 내용을 입력해주세요."),
 
@@ -53,7 +54,9 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(404, "존재하지 않는 댓글입니다."),
     COMMENT_LIKE_NOT_FOUND(404, "댓글 좋아요 내역이 존재하지 않습니다."),
     ROOM_NOT_FOUND(404, "존재하지 않는 채팅방입니다."),
-    ALARM_NOT_FOUND(404, "존재하지 않는 알림입니다."),
+    HASHTAG_NOT_FOUND(404, "존재하지 않는 해시태그입니다."),
+    HASHTAG_FOLLOW_NOT_FOUND(404, "해시태그 팔로우 내역이 존재하지 않습니다."),
+    MESSAGE_NOT_FOUND(404, "존재하지 않는 메시지입니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
@@ -63,6 +66,7 @@ public enum ErrorCode {
     ALREADY_FOLLOWING(409, "이미 팔로우한 사용자입니다."),
     ALREADY_COMMENT_LIKED(409, "이미 좋아요한 댓글입니다."),
     ROOM_ALREADY_EXISTS(409, "이미 존재하는 채팅방입니다."),
+    ALREADY_HASHTAG_FOLLOWED(409, "이미 팔로우한 해시태그입니다."),
 
     // 500 - 서버 오류
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
