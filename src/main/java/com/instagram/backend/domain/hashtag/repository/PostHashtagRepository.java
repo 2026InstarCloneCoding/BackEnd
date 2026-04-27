@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface PostHashtagRepository extends JpaRepository<PostHashtag, Long> {
@@ -21,4 +22,8 @@ public interface PostHashtagRepository extends JpaRepository<PostHashtag, Long> 
 
     //게시물 삭제할 때 모든 해시태그 삭제할 때
     List<PostHashtag> findByPostId(Long postId);
+
+    // 피드용 — 여러 게시물의 PostHashtag 일괄 조회 (N+1 방지)
+    @Query("SELECT ph FROM PostHashtag ph WHERE ph.postId IN :postIds")
+    List<PostHashtag> findByPostIdIn(@Param("postIds") Collection<Long> postIds);
 }
