@@ -56,6 +56,7 @@ public enum ErrorCode {
     HASHTAG_NOT_FOUND(404, "존재하지 않는 해시태그입니다."),
     HASHTAG_FOLLOW_NOT_FOUND(404, "해시태그 팔로우 내역이 존재하지 않습니다."),
     MESSAGE_NOT_FOUND(404, "존재하지 않는 메시지입니다."),
+    ALARM_NOT_FOUND(404, "존재하지 않는 알림입니다."),
 
     // 409 - 중복
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
