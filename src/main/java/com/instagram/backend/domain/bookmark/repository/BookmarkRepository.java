@@ -3,9 +3,13 @@ package com.instagram.backend.domain.bookmark.repository;
 import com.instagram.backend.domain.bookmark.entity.Bookmark;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByPostIdAndMemberId(Long postId, Long memberId);
@@ -23,4 +27,10 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     // — LessThan 조건으로 "이미 본 데이터 이후" 만 가져오는 게 커서 방식의 핵심
     List<Bookmark> findByMemberIdAndBookmarkIdLessThanOrderByBookmarkIdDesc(
             Long memberId, Long cursor, Pageable pageable);
+
+    // 피드용 — 내가 저장한 postId Set (O(1) 조회로 N+1 방지)
+    @Query("SELECT b.postId FROM Bookmark b WHERE b.memberId = :memberId AND b.postId IN :postIds")
+    Set<Long> findPostIdsByMemberIdAndPostIdIn(
+            @Param("memberId") Long memberId,
+            @Param("postIds") Collection<Long> postIds);
 }

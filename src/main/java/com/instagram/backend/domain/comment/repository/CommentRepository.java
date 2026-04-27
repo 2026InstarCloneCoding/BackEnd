@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,4 +37,13 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Modifying
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.commentId = :commentId AND c.isDeleted = false AND c.likeCount > 0")
     int decrementLikeCountAndIsDeletedFalse(@Param("commentId") Long commentId);
+
+    // 피드용 — 여러 게시물의 댓글 수 일괄 집계 [postId, count] 형태 반환
+    @Query("""
+        SELECT c.postId, COUNT(c)
+        FROM Comment c
+        WHERE c.postId IN :postIds AND c.isDeleted = false
+        GROUP BY c.postId
+    """)
+    List<Object[]> countByPostIdInAndIsDeletedFalse(@Param("postIds") Collection<Long> postIds);
 }
