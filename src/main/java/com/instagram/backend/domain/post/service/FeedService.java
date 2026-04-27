@@ -14,6 +14,7 @@ import com.instagram.backend.domain.post.entity.PostImage;
 import com.instagram.backend.domain.post.repository.PostImageRepository;
 import com.instagram.backend.domain.post.repository.PostLikeRepository;
 import com.instagram.backend.domain.post.repository.PostRepository;
+import com.instagram.backend.domain.comment.repository.PostCommentCount;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -103,8 +104,8 @@ public class FeedService {
                 .countByPostIdInAndIsDeletedFalse(postIds)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> ((Long) row[1]).intValue()
+                        PostCommentCount::getPostId,
+                        row -> row.getCount().intValue()
                 ));
 
         // 응답 조립

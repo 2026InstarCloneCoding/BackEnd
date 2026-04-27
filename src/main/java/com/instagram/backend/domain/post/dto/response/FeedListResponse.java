@@ -1,20 +1,16 @@
 package com.instagram.backend.domain.post.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeedListResponse {
 
-    @JsonProperty("posts")
     private final List<FeedResponse> posts;
-
-    @JsonProperty("next_cursor")
     private final Long nextCursor;
-
-    @JsonProperty("has_more")
     private final boolean hasMore;
 
     private FeedListResponse(List<FeedResponse> posts, Long nextCursor, boolean hasMore) {

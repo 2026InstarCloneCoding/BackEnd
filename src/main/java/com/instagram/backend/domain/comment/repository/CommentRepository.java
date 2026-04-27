@@ -38,12 +38,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.commentId = :commentId AND c.isDeleted = false AND c.likeCount > 0")
     int decrementLikeCountAndIsDeletedFalse(@Param("commentId") Long commentId);
 
-    // 피드용 — 여러 게시물의 댓글 수 일괄 집계 [postId, count] 형태 반환
+    // 피드용 — 여러 게시물의 댓글 수 일괄 집계
     @Query("""
-        SELECT c.postId, COUNT(c)
+        SELECT c.postId AS postId, COUNT(c) AS count
         FROM Comment c
         WHERE c.postId IN :postIds AND c.isDeleted = false
         GROUP BY c.postId
     """)
-    List<Object[]> countByPostIdInAndIsDeletedFalse(@Param("postIds") Collection<Long> postIds);
+    List<PostCommentCount> countByPostIdInAndIsDeletedFalse(@Param("postIds") Collection<Long> postIds);
 }

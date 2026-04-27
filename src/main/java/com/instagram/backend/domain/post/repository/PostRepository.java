@@ -31,7 +31,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {//<다룰 앤
         SELECT DISTINCT p FROM Post p
         JOIN FETCH p.member
         WHERE p.isDeleted = false
-          AND (p.member.id IN :followingMemberIds OR p.postId IN :hashtagPostIds)
+          AND (p.member.memberId IN :followingMemberIds OR p.postId IN :hashtagPostIds)
         ORDER BY p.postId DESC
     """)
     List<Post> findFeedPostsFirst(
@@ -44,7 +44,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {//<다룰 앤
         SELECT DISTINCT p FROM Post p
         JOIN FETCH p.member
         WHERE p.isDeleted = false
-          AND (p.member.id IN :followingMemberIds OR p.postId IN :hashtagPostIds)
+          AND (p.member.memberId IN :followingMemberIds OR p.postId IN :hashtagPostIds)
           AND p.postId < :cursor
         ORDER BY p.postId DESC
     """)
