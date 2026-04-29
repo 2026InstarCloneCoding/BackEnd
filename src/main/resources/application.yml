@@ -46,6 +46,9 @@ management:
     mail:
       enabled: false   # 로컬에서 Gmail 인증 없이 실행 시 비활성화
 
+media:
+  presigned-url-expiration: 300
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

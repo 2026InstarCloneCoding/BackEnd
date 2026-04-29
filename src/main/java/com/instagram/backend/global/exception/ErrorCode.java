@@ -24,6 +24,9 @@ public enum ErrorCode {
     INVALID_SEARCH_QUERY(400, "검색어는 1자 이상 입력해주세요."),
     INVALID_DTYPE(400, "올바르지 않은 메시지 타입입니다."),
     MISSING_MESSAGE_CONTENT(400, "메시지 내용을 입력해주세요."),
+    INVALID_FILE_TYPE(400, "지원하지 않는 파일 형식입니다."),
+    EXCEED_FILE_SIZE(400, "파일 크기는 10MB를 초과할 수 없습니다."),
+    INVALID_UPLOAD_TYPE(400, "올바르지 않은 업로드 타입입니다."),
 
     // 401 - 인증 오류
     UNAUTHORIZED(401, "로그인이 필요합니다."),
