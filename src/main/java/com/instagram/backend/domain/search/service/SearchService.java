@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
 /*
   SearchService — 검색 도메인 비즈니스 로직
 
@@ -101,18 +102,21 @@ public class SearchService {
         — '#' 접두사 처리 단계 추가
         — is_following 같은 관계 필드 없음 (명세 외 스코프)
         — 본인 제외 같은 필터 없음 (해시태그는 작성자 개념 없음)
+
+      myMemberId 파라미터:
+        — 현재 본 메서드 내부 로직에서는 미사용
+        — searchUsers 와 시그너처를 통일하기 위해 유지
+        — 향후 개인화(차단/숨김 해시태그, 개인 추천 가중치 등) 확장 시 활용 예정
     */
     public HashtagSearchResponse searchHashtags(Long myMemberId, String q, Integer limit) {
         String stripped = stripHashPrefix(q);
         String escaped = escapeLikePattern(validateQuery(stripped));
         int size = validateLimit(limit);
 
+        // searchByName 결과가 비어 있어도 HashtagSearchResponse.of 가 정상 처리하므로
+        // 별도 early-return 분기 불필요 (searchUsers 와는 달리 후속 IN 쿼리가 없음)
         List<Hashtag> hashtags = hashtagRepository.searchByName(
                 escaped, PageRequest.of(0, size));
-
-        if (hashtags.isEmpty()) {
-            return HashtagSearchResponse.of(Collections.emptyList());
-        }
 
         return HashtagSearchResponse.of(hashtags);
     }
@@ -162,6 +166,9 @@ public class SearchService {
           의도치 않게 전체 row가 반환될 수 있음 (정보 열거 위험)
         — '\' 를 가장 먼저 이스케이프해야 이중 이스케이프 충돌 방지
         — JPQL 쿼리의 ESCAPE '\\' 절과 함께 동작
+
+      호출 전 validateQuery() 통과를 가정하므로 null 검사를 별도 수행하지 않음.
+      추후 외부에서 직접 호출되는 일이 생긴다면 null/blank 가드 추가 필요.
     */
     private String escapeLikePattern(String q) {
         return q
@@ -173,7 +180,8 @@ public class SearchService {
     /*
       해시태그 검색어의 '#' 접두사 제거
         — 사용자가 '#음식' 으로 검색해도 '음식' 으로 검색한 것과 동일하게 처리
-        — null 안전 (validateQuery 에서 null 처리)
+        — '#' 분기와 비분기 모두 trim 된 값을 반환하여 동작 일관성 유지
+        — null 안전 (validateQuery 에서 null 재검증)
     */
     private String stripHashPrefix(String q) {
         if (q == null) return null;
@@ -181,6 +189,6 @@ public class SearchService {
         if (trimmed.startsWith("#")) {
             return trimmed.substring(1);
         }
-        return q;
+        return trimmed;
     }
 }

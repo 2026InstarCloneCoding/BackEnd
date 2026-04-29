@@ -33,5 +33,4 @@ public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
             "WHERE h.name LIKE CONCAT('%', :q, '%') ESCAPE '\\' " +
             "ORDER BY h.postCount DESC, h.name ASC")
     List<Hashtag> searchByName(@Param("q") String q, Pageable pageable);
-
 }
