@@ -35,6 +35,7 @@ public class MediaService {
             "image/jpeg", "image/png", "image/gif", "image/webp"
     );
     private static final long MAX_FILE_SIZE = 10_485_760L; // 10MB
+    private static final int MAX_FILENAME_LENGTH = 100;
 
     public PresignedUrlResponse generatePresignedUrl(PresignedUrlRequest request) {
         if (!ALLOWED_TYPES.contains(request.getFileType())) {
@@ -49,7 +50,7 @@ public class MediaService {
 
         UploadType uploadType = UploadType.valueOf(request.getUploadType());
         String uuid = UUID.randomUUID().toString();
-        String objectKey = uploadType.getDirectory() + "/" + uuid + "_" + request.getFileName();
+        String objectKey = uploadType.getDirectory() + "/" + uuid + "_" + sanitizeFileName(request.getFileName());
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofSeconds(expiresIn))
@@ -69,5 +70,18 @@ public class MediaService {
                 .mediaUuid(uuid)
                 .expiresIn(expiresIn)
                 .build();
+    }
+
+    private String sanitizeFileName(String original) {
+        if (original == null || original.isBlank()) return "file";
+
+        String name = original.strip();
+        name = name.replaceAll("[^a-zA-Z0-9._-]", "_");  // 허용 문자 외 치환
+        name = name.replaceAll("\\.{2,}", ".");            // 연속 점 제거 (..)
+        name = name.replaceAll("^[/._-]+", "");           // 앞쪽 슬래시·점·대시 제거
+        if (name.length() > MAX_FILENAME_LENGTH) {
+            name = name.substring(0, MAX_FILENAME_LENGTH);
+        }
+        return name.isBlank() ? "file" : name;
     }
 }

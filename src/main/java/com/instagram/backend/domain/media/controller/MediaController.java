@@ -7,6 +7,7 @@ import com.instagram.backend.global.dto.ApiResponse;
 import com.instagram.backend.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,6 @@ public class MediaController {
     public ResponseEntity<ApiResponse<PresignedUrlResponse>> getPresignedUrl(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody PresignedUrlRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(mediaService.generatePresignedUrl(request), "업로드 URL이 발급되었습니다."));
+        return ResponseEntity.status(HttpStatus.CREATED) .body(ApiResponse.success(mediaService.generatePresignedUrl(request), "업로드 URL이 발급되었습니다."));
     }
 }
