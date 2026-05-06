@@ -1,5 +1,6 @@
 package com.instagram.backend.domain.search.controller;
 
+import com.instagram.backend.domain.search.dto.response.HashtagSearchResponse;
 import com.instagram.backend.domain.search.dto.response.UserSearchResponse;
 import com.instagram.backend.domain.search.service.SearchService;
 import com.instagram.backend.global.dto.ApiResponse;
@@ -54,6 +55,36 @@ public class SearchController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(response, "유저 검색에 성공하였습니다.")
+        );
+    }
+
+    /*
+      GET /api/search/hashtags — 해시태그 검색
+
+      쿼리 파라미터:
+        — q (필수): 검색어. Hashtag.name 에 대해 LIKE 검색 ('#' 접두사 자동 제거)
+        — limit (선택): 결과 수. 기본 10, 최대 50
+
+      응답:
+        — hashtags 배열 안에 hashtag_id, name, post_count
+        — 정렬: post_count DESC, name ASC (인기순 → 이름순)
+        — 검색 결과가 없으면 빈 배열 반환 (404가 아닌 200 + 빈 리스트)
+
+      참고:
+        — 유저 검색의 is_following 같은 관계 필드는 명세 외 스코프이므로 제외
+    */
+    @GetMapping("/hashtags")
+    public ResponseEntity<ApiResponse<HashtagSearchResponse>> searchHashtags(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            // required=false 이유는 searchUsers 와 동일 — 명세서 정의 에러코드를 서비스에서 직접 반환
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Integer limit) {
+
+        HashtagSearchResponse response = searchService.searchHashtags(
+                userDetails.getMemberId(), q, limit);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "해시태그 검색에 성공하였습니다.")
         );
     }
 }
