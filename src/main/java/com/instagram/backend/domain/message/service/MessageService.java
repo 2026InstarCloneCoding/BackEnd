@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.message.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.chat.entity.ChatRoomMember;
 import com.instagram.backend.domain.chat.repository.ChatRoomMemberRepository;
 import com.instagram.backend.domain.chat.repository.ChatRoomRepository;
@@ -26,6 +28,7 @@ import com.instagram.backend.global.dto.CursorPageResponse;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -60,6 +63,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MessageService {
 
     // 목록 조회 limit 기본값/최대값 (명세서: 기본 30)
@@ -78,6 +82,7 @@ public class MessageService {
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
     private final StoryRepository storyRepository;
+    private final AlarmService alarmService;
 
     /*
       메시지 전송 — POST /api/chats/{roomId}/messages
@@ -183,6 +188,20 @@ public class MessageService {
         //    — findById(Long)은 탈퇴 계정까지 노출하므로 프로젝트 전반의 isDeletedFalse 패턴 사용
         Member sender = memberRepository.findByMemberIdAndIsDeletedFalse(myMemberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 8) 채팅방 참여자(발신자 제외)에게 MESSAGE 알람 전송
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(roomId);
+        for (ChatRoomMember member : members) {
+            if (!member.getMemberId().equals(myMemberId)) {
+                try {
+                    alarmService.createAlarm(
+                            Alarm.ofMessage(member.getMemberId(), myMemberId,
+                                    savedMessage.getMessageId(), roomId));
+                } catch (Exception e) {
+                    log.warn("MESSAGE 알람 생성 실패 (memberId={}): {}", member.getMemberId(), e.getMessage());
+                }
+            }
+        }
 
         return buildSendResponse(savedMessage, sender, dtype, request, sharedPost, sharedStory);
     }

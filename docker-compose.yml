@@ -31,6 +31,14 @@ services:
       interval: 10s
       retries: 3
 
+  # ── Redis GUI ─────────────────────────────────────────
+  redisinsight:
+    image: redis/redisinsight:latest
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+
   # ── Monitoring ────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v3.2.0

@@ -4,5 +4,7 @@ public enum AlarmType {
     FOLLOW,
     POST_LIKE,
     COMMENT,
-    COMMENT_LIKE
+    COMMENT_LIKE,
+    STORY_VIEW,
+    MESSAGE
 }

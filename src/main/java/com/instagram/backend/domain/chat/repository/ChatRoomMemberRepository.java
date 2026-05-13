@@ -34,6 +34,10 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     // → 내가 속한 room들의 "다른 참여자" 정보를 한 번에 가져올 때 사용
     List<ChatRoomMember> findByChatRoomIdIn(Collection<Long> chatRoomIds);
 
+    // 단일 채팅방의 전체 참여자 목록 조회
+    // SELECT * FROM chat_room_members WHERE chat_room_id = ?
+    List<ChatRoomMember> findByChatRoomId(Long chatRoomId);
+
     /*
       1:1 DM 채팅방 중복 체크용 쿼리
 

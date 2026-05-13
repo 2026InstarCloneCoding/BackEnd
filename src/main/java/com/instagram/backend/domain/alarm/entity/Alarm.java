@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "alarms")
+@Table(name = "alarms", indexes = {
+        @Index(name = "idx_alarm_target_member_id", columnList = "target_member_id"),
+        @Index(name = "idx_alarm_target_unread",   columnList = "target_member_id, read_at")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Alarm extends BaseTimeEntity {
@@ -88,6 +91,29 @@ public class Alarm extends BaseTimeEntity {
                 .senderMemberId(senderMemberId)
                 .referenceId(commentId)
                 .secondaryReferenceId(postId)
+                .build();
+    }
+
+    public static Alarm ofStoryView(Long targetMemberId, Long senderMemberId, Long storyId) {
+        Objects.requireNonNull(storyId, "storyId must not be null for STORY_VIEW");
+        return Alarm.builder()
+                .alarmType(AlarmType.STORY_VIEW)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(storyId)
+                .build();
+    }
+
+    public static Alarm ofMessage(Long targetMemberId, Long senderMemberId,
+                                   Long messageId, Long chatRoomId) {
+        Objects.requireNonNull(messageId, "messageId must not be null for MESSAGE");
+        Objects.requireNonNull(chatRoomId, "chatRoomId must not be null for MESSAGE");
+        return Alarm.builder()
+                .alarmType(AlarmType.MESSAGE)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(messageId)
+                .secondaryReferenceId(chatRoomId)
                 .build();
     }
 
