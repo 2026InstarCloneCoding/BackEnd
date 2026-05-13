@@ -31,6 +31,16 @@ services:
       interval: 10s
       retries: 3
 
+  # ── k6 메트릭 저장소 ──────────────────────────────────
+  influxdb:
+    image: influxdb:1.8
+    ports:
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: k6
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+
   # ── Monitoring ────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v3.2.0
@@ -94,3 +104,4 @@ services:
 volumes:
   mysql-data:
   grafana-data:
+  influxdb-data:
