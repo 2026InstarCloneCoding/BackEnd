@@ -28,6 +28,7 @@ import com.instagram.backend.global.dto.CursorPageResponse;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MessageService {
 
     // 목록 조회 limit 기본값/최대값 (명세서: 기본 30)
@@ -191,9 +193,13 @@ public class MessageService {
         List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(roomId);
         for (ChatRoomMember member : members) {
             if (!member.getMemberId().equals(myMemberId)) {
-                alarmService.createAlarm(
-                        Alarm.ofMessage(member.getMemberId(), myMemberId,
-                                savedMessage.getMessageId(), roomId));
+                try {
+                    alarmService.createAlarm(
+                            Alarm.ofMessage(member.getMemberId(), myMemberId,
+                                    savedMessage.getMessageId(), roomId));
+                } catch (Exception e) {
+                    log.warn("MESSAGE 알람 생성 실패 (memberId={}): {}", member.getMemberId(), e.getMessage());
+                }
             }
         }
 
