@@ -18,7 +18,17 @@ export function login(email, password) {
     return null;
   }
 
-  const body = JSON.parse(res.body);
+  let body;
+  try {
+    body = JSON.parse(res.body);
+  } catch (e) {
+    throw new Error(`[auth] 응답 파싱 실패 (status=${res.status}): ${res.body}`);
+  }
+
+  if (!body || !body.data || !body.data.accessToken) {
+    throw new Error(`[auth] accessToken 없음 (status=${res.status}): ${res.body}`);
+  }
+
   return body.data.accessToken;
 }
 
@@ -27,6 +37,9 @@ export function login(email, password) {
  * 사용: authHeader(token)
  */
 export function authHeader(token) {
+  if (!token || typeof token !== 'string' || !token.trim()) {
+    throw new Error('authHeader: missing or empty token');
+  }
   return { Authorization: `Bearer ${token}` };
 }
 

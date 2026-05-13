@@ -5,9 +5,20 @@
 
 set -e
 
-# .env 파일 로드 (있으면)
+# .env 파일 로드 (있으면) — 공백/특수문자 안전 파싱
 if [ -f "k6/.env" ]; then
-  export $(grep -v '^#' k6/.env | xargs)
+  while IFS='=' read -r key value; do
+    # 빈 줄, 주석 건너뛰기
+    [[ -z "$key" || "$key" == \#* ]] && continue
+    # 앞뒤 공백 제거
+    key="${key// /}"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    # 따옴표 제거 (값이 "..." 또는 '...'로 감싸진 경우)
+    value="${value#\"}" ; value="${value%\"}"
+    value="${value#\'}"  ; value="${value%\'}"
+    export "$key=$value"
+  done < "k6/.env"
 fi
 
 BASE_URL=${BASE_URL:-http://localhost:8080}
@@ -26,10 +37,10 @@ if [ -z "$TARGET" ]; then
 fi
 
 k6 run \
-  -e BASE_URL=$BASE_URL \
-  -e TEST_EMAIL=$TEST_EMAIL \
-  -e TEST_PASSWORD=$TEST_PASSWORD \
-  -e TEST_USERNAME=$TEST_USERNAME \
-  -e TEST_ROOM_ID=$TEST_ROOM_ID \
-  -e FRONTEND_ORIGIN=$FRONTEND_ORIGIN \
+  -e BASE_URL="$BASE_URL" \
+  -e TEST_EMAIL="$TEST_EMAIL" \
+  -e TEST_PASSWORD="$TEST_PASSWORD" \
+  -e TEST_USERNAME="$TEST_USERNAME" \
+  -e TEST_ROOM_ID="$TEST_ROOM_ID" \
+  -e FRONTEND_ORIGIN="$FRONTEND_ORIGIN" \
   "$TARGET"
