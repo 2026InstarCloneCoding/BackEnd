@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "alarms")
+@Table(name = "alarms", indexes = {
+        @Index(name = "idx_alarm_target_member_id", columnList = "target_member_id"),
+        @Index(name = "idx_alarm_target_unread",   columnList = "target_member_id, read_at")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Alarm extends BaseTimeEntity {
