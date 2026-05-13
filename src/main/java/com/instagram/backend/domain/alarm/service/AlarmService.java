@@ -73,10 +73,11 @@ public class AlarmService {
                 .map(Alarm::getSenderMemberId)
                 .collect(Collectors.toSet());
 
-        Map<Long, Member> senderMap = memberRepository.findAllById(senderIds).stream()
+        Map<Long, Member> senderMap = memberRepository.findByMemberIdInAndIsDeletedFalse(senderIds).stream()
                 .collect(Collectors.toMap(Member::getMemberId, m -> m));
 
         List<AlarmResponse> content = result.stream()
+                .filter(alarm -> senderMap.containsKey(alarm.getSenderMemberId()))
                 .map(alarm -> AlarmResponse.of(alarm, senderMap.get(alarm.getSenderMemberId())))
                 .collect(Collectors.toList());
 
