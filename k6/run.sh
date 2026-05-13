@@ -36,7 +36,10 @@ if [ -z "$TARGET" ]; then
   exit 1
 fi
 
+INFLUXDB_URL=${INFLUXDB_URL:-http://localhost:8086/k6}
+
 k6 run \
+  --out "influxdb=$INFLUXDB_URL" \
   -e BASE_URL="$BASE_URL" \
   -e TEST_EMAIL="$TEST_EMAIL" \
   -e TEST_PASSWORD="$TEST_PASSWORD" \
