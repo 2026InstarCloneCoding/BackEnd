@@ -13,6 +13,7 @@ import com.instagram.backend.domain.story.repository.StoryVisitorRepository;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class StoryService {
 
     private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
@@ -77,6 +79,9 @@ public class StoryService {
                     // storyId는 findStory()에서, memberId는 JWT 인증에서 검증된 값이므로
                     // 이 시점의 DataIntegrityViolationException은 레이스 컨디션으로 인한
                     // UNIQUE 위반(story_id, member_id)만 해당 — 안전하게 무시
+                } catch (Exception e) {
+                    log.warn("STORY_VIEW 알람 생성 실패 (storyId={}): {}", storyId, e.getMessage());
+                    // StoryVisitor는 정상 저장됨 — 알람 실패만 무시
                 }
             }
         }
