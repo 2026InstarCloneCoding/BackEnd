@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.message.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.chat.entity.ChatRoomMember;
 import com.instagram.backend.domain.chat.repository.ChatRoomMemberRepository;
 import com.instagram.backend.domain.chat.repository.ChatRoomRepository;
@@ -78,6 +80,7 @@ public class MessageService {
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
     private final StoryRepository storyRepository;
+    private final AlarmService alarmService;
 
     /*
       메시지 전송 — POST /api/chats/{roomId}/messages
@@ -183,6 +186,16 @@ public class MessageService {
         //    — findById(Long)은 탈퇴 계정까지 노출하므로 프로젝트 전반의 isDeletedFalse 패턴 사용
         Member sender = memberRepository.findByMemberIdAndIsDeletedFalse(myMemberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 8) 채팅방 참여자(발신자 제외)에게 MESSAGE 알람 전송
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(roomId);
+        for (ChatRoomMember member : members) {
+            if (!member.getMemberId().equals(myMemberId)) {
+                alarmService.createAlarm(
+                        Alarm.ofMessage(member.getMemberId(), myMemberId,
+                                savedMessage.getMessageId(), roomId));
+            }
+        }
 
         return buildSendResponse(savedMessage, sender, dtype, request, sharedPost, sharedStory);
     }

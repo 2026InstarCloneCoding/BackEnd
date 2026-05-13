@@ -91,6 +91,29 @@ public class Alarm extends BaseTimeEntity {
                 .build();
     }
 
+    public static Alarm ofStoryView(Long targetMemberId, Long senderMemberId, Long storyId) {
+        Objects.requireNonNull(storyId, "storyId must not be null for STORY_VIEW");
+        return Alarm.builder()
+                .alarmType(AlarmType.STORY_VIEW)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(storyId)
+                .build();
+    }
+
+    public static Alarm ofMessage(Long targetMemberId, Long senderMemberId,
+                                   Long messageId, Long chatRoomId) {
+        Objects.requireNonNull(messageId, "messageId must not be null for MESSAGE");
+        Objects.requireNonNull(chatRoomId, "chatRoomId must not be null for MESSAGE");
+        return Alarm.builder()
+                .alarmType(AlarmType.MESSAGE)
+                .targetMemberId(targetMemberId)
+                .senderMemberId(senderMemberId)
+                .referenceId(messageId)
+                .secondaryReferenceId(chatRoomId)
+                .build();
+    }
+
     // 최초 읽음 시각을 보존 — 중복 호출 시 덮어쓰지 않음
     public void markAsRead() {
         if (this.readAt == null) {

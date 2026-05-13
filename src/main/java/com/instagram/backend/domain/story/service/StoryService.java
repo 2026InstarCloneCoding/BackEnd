@@ -1,5 +1,7 @@
 package com.instagram.backend.domain.story.service;
 
+import com.instagram.backend.domain.alarm.entity.Alarm;
+import com.instagram.backend.domain.alarm.service.AlarmService;
 import com.instagram.backend.domain.follow.repository.FollowRepository;
 import com.instagram.backend.domain.member.entity.Member;
 import com.instagram.backend.domain.member.repository.MemberRepository;
@@ -34,6 +36,7 @@ public class StoryService {
     private final StoryVisitorRepository storyVisitorRepository;
     private final FollowRepository followRepository;
     private final MemberRepository memberRepository;
+    private final AlarmService alarmService;
 
     @Transactional
     public StoryCreateResponse createStory(Long memberId, StoryCreateRequest request) {
@@ -69,6 +72,7 @@ public class StoryService {
                             .memberId(memberId)
                             .build();
                     storyVisitorRepository.save(visitor);
+                    alarmService.createAlarm(Alarm.ofStoryView(story.getMemberId(), memberId, storyId));
                 } catch (DataIntegrityViolationException ignored) {
                     // storyId는 findStory()에서, memberId는 JWT 인증에서 검증된 값이므로
                     // 이 시점의 DataIntegrityViolationException은 레이스 컨디션으로 인한

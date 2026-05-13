@@ -9,7 +9,9 @@ import com.instagram.backend.global.dto.CursorPageResponse;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,15 +23,24 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class AlarmService {
+
+    private static final String UNREAD_KEY_PREFIX = "alarm:unread:";
 
     private final AlarmRepository alarmRepository;
     private final MemberRepository memberRepository;
+    private final StringRedisTemplate redisTemplate;
 
     @Transactional
     public void createAlarm(Alarm alarm) {
         if (alarm.getTargetMemberId().equals(alarm.getSenderMemberId())) return;
         alarmRepository.save(alarm);
+        try {
+            redisTemplate.opsForValue().increment(UNREAD_KEY_PREFIX + alarm.getTargetMemberId());
+        } catch (Exception e) {
+            log.warn("Redis INCR 실패 (alarm:unread:{}): {}", alarm.getTargetMemberId(), e.getMessage());
+        }
     }
 
     public CursorPageResponse<AlarmResponse> getAlarms(Long memberId, String cursor, int limit) {
@@ -81,10 +92,31 @@ public class AlarmService {
         if (!alarm.getTargetMemberId().equals(memberId)) {
             throw new BusinessException(ErrorCode.ALARM_ACCESS_DENIED);
         }
+        boolean wasUnread = alarm.getReadAt() == null;
         alarm.markAsRead();
+        if (wasUnread) {
+            try {
+                String key = UNREAD_KEY_PREFIX + memberId;
+                Long current = redisTemplate.opsForValue().decrement(key);
+                if (current != null && current < 0) {
+                    redisTemplate.opsForValue().set(key, "0");
+                }
+            } catch (Exception e) {
+                log.warn("Redis DECR 실패 (alarm:unread:{}): {}", memberId, e.getMessage());
+            }
+        }
     }
 
     public long getUnreadCount(Long memberId) {
-        return alarmRepository.countByTargetMemberIdAndReadAtIsNull(memberId);
+        try {
+            String value = redisTemplate.opsForValue().get(UNREAD_KEY_PREFIX + memberId);
+            if (value != null) return Long.parseLong(value);
+            long count = alarmRepository.countByTargetMemberIdAndReadAtIsNull(memberId);
+            redisTemplate.opsForValue().set(UNREAD_KEY_PREFIX + memberId, String.valueOf(count));
+            return count;
+        } catch (Exception e) {
+            log.warn("Redis 조회 실패 (alarm:unread:{}), DB fallback: {}", memberId, e.getMessage());
+            return alarmRepository.countByTargetMemberIdAndReadAtIsNull(memberId);
+        }
     }
 }
