@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 public class AlarmService {
 
     private static final String UNREAD_KEY_PREFIX = "alarm:unread:";
+    private static final Duration UNREAD_TTL = Duration.ofDays(30);
 
     private final AlarmRepository alarmRepository;
     private final MemberRepository memberRepository;
@@ -37,7 +39,9 @@ public class AlarmService {
         if (alarm.getTargetMemberId().equals(alarm.getSenderMemberId())) return;
         alarmRepository.save(alarm);
         try {
-            redisTemplate.opsForValue().increment(UNREAD_KEY_PREFIX + alarm.getTargetMemberId());
+            String key = UNREAD_KEY_PREFIX + alarm.getTargetMemberId();
+            redisTemplate.opsForValue().increment(key);
+            redisTemplate.expire(key, UNREAD_TTL);
         } catch (Exception e) {
             log.warn("Redis INCR 실패 (alarm:unread:{}): {}", alarm.getTargetMemberId(), e.getMessage());
         }
@@ -100,7 +104,7 @@ public class AlarmService {
                 String key = UNREAD_KEY_PREFIX + memberId;
                 Long current = redisTemplate.opsForValue().decrement(key);
                 if (current != null && current < 0) {
-                    redisTemplate.opsForValue().set(key, "0");
+                    redisTemplate.opsForValue().set(key, "0", UNREAD_TTL);
                 }
             } catch (Exception e) {
                 log.warn("Redis DECR 실패 (alarm:unread:{}): {}", memberId, e.getMessage());
@@ -113,7 +117,7 @@ public class AlarmService {
             String value = redisTemplate.opsForValue().get(UNREAD_KEY_PREFIX + memberId);
             if (value != null) return Long.parseLong(value);
             long count = alarmRepository.countByTargetMemberIdAndReadAtIsNull(memberId);
-            redisTemplate.opsForValue().set(UNREAD_KEY_PREFIX + memberId, String.valueOf(count));
+            redisTemplate.opsForValue().set(UNREAD_KEY_PREFIX + memberId, String.valueOf(count), UNREAD_TTL);
             return count;
         } catch (Exception e) {
             log.warn("Redis 조회 실패 (alarm:unread:{}), DB fallback: {}", memberId, e.getMessage());
