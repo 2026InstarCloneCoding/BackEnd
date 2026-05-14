@@ -15,7 +15,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /*
@@ -156,11 +159,19 @@ public class FollowService {
         boolean hasNext = follows.size() > limit;
         List<Follow> resultFollows = hasNext ? follows.subList(0, limit) : follows;
 
-        // 5. Follow → FollowListResponse 변환 (팔로워 = followerId로 Member 조회)
+        // 5. Follow → FollowListResponse 변환 (IN 배치 조회로 N+1 제거)
+        List<Long> followerIds = resultFollows.stream()
+                .map(Follow::getFollowerId)
+                .collect(Collectors.toList());
+        Map<Long, Member> memberMap = memberRepository.findByMemberIdInAndIsDeletedFalse(followerIds)
+                .stream()
+                .collect(Collectors.toMap(Member::getMemberId, m -> m));
+        Set<Long> followingSet = new HashSet<>(followRepository.findFollowingIdsAmong(myMemberId, followerIds));
+
         List<FollowListResponse> content = resultFollows.stream()
                 .map(follow -> {
-                    Member follower = findMemberById(follow.getFollowerId());
-                    boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(myMemberId, follower.getMemberId());
+                    Member follower = memberMap.get(follow.getFollowerId());
+                    boolean isFollowing = followingSet.contains(follow.getFollowerId());
                     return FollowListResponse.of(follower, isFollowing);
                 })
                 .collect(Collectors.toList());
@@ -193,11 +204,19 @@ public class FollowService {
         boolean hasNext = follows.size() > limit;
         List<Follow> resultFollows = hasNext ? follows.subList(0, limit) : follows;
 
-        // 팔로잉 = followingId로 Member 조회 (내가 팔로우하는 사람)
+        // 팔로잉 = followingId로 Member 조회 (IN 배치 조회로 N+1 제거)
+        List<Long> followingIds = resultFollows.stream()
+                .map(Follow::getFollowingId)
+                .collect(Collectors.toList());
+        Map<Long, Member> memberMap = memberRepository.findByMemberIdInAndIsDeletedFalse(followingIds)
+                .stream()
+                .collect(Collectors.toMap(Member::getMemberId, m -> m));
+        Set<Long> myFollowingSet = new HashSet<>(followRepository.findFollowingIdsAmong(myMemberId, followingIds));
+
         List<FollowListResponse> content = resultFollows.stream()
                 .map(follow -> {
-                    Member following = findMemberById(follow.getFollowingId());
-                    boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(myMemberId, following.getMemberId());
+                    Member following = memberMap.get(follow.getFollowingId());
+                    boolean isFollowing = myFollowingSet.contains(follow.getFollowingId());
                     return FollowListResponse.of(following, isFollowing);
                 })
                 .collect(Collectors.toList());
