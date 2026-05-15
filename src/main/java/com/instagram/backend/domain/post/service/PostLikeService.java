@@ -9,6 +9,7 @@ import com.instagram.backend.domain.post.repository.PostRepository;
 import com.instagram.backend.global.exception.BusinessException;
 import com.instagram.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +26,19 @@ public class PostLikeService {
     @Transactional
     public void likePost(Long memberId, Long postId) {
         Post post = postRepository.findByPostIdAndIsDeletedFalse(postId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));//삭제안된 게시물
-        if (postLikeRepository.existsByPostIdAndMemberId(postId, memberId)) {
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+
+        try {
+            postLikeRepository.save(PostLike.builder()
+                    .postId(postId)
+                    .memberId(memberId)
+                    .build());
+        } catch (DataIntegrityViolationException e) {
+            // UNIQUE 제약 위반 = 이미 좋아요한 게시물
             throw new BusinessException(ErrorCode.ALREADY_LIKED);
         }
 
-        postLikeRepository.save(PostLike.builder()
-                .postId(postId)
-                .memberId((memberId))
-                .build()); // 좋아요 기록 저장
-
-        post.increaseLikeCount();
+        post.increaseLikeCount(); // @Version으로 lost update 방지
 
         alarmService.createAlarm(Alarm.ofPostLike(post.getMember().getMemberId(), memberId, postId));
     }
