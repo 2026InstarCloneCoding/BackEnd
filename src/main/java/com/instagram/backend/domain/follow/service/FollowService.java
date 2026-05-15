@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -171,9 +172,11 @@ public class FollowService {
         List<FollowListResponse> content = resultFollows.stream()
                 .map(follow -> {
                     Member follower = memberMap.get(follow.getFollowerId());
+                    if (follower == null) return null; // 탈퇴한 멤버는 건너뜀
                     boolean isFollowing = followingSet.contains(follow.getFollowerId());
                     return FollowListResponse.of(follower, isFollowing);
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         // 6. 다음 커서 = 마지막 항목의 follow_id
@@ -216,9 +219,11 @@ public class FollowService {
         List<FollowListResponse> content = resultFollows.stream()
                 .map(follow -> {
                     Member following = memberMap.get(follow.getFollowingId());
+                    if (following == null) return null; // 탈퇴한 멤버는 건너뜀
                     boolean isFollowing = myFollowingSet.contains(follow.getFollowingId());
                     return FollowListResponse.of(following, isFollowing);
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         String nextCursor = hasNext ? String.valueOf(resultFollows.get(resultFollows.size() - 1).getFollowId()) : null;

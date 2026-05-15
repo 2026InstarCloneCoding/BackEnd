@@ -34,8 +34,11 @@ public class PostLikeService {
                     .memberId(memberId)
                     .build());
         } catch (DataIntegrityViolationException e) {
-            // UNIQUE 제약 위반 = 이미 좋아요한 게시물
-            throw new BusinessException(ErrorCode.ALREADY_LIKED);
+            String msg = e.getMostSpecificCause().getMessage();
+            if (msg != null && msg.contains("uk_post_likes_post_member")) {
+                throw new BusinessException(ErrorCode.ALREADY_LIKED);
+            }
+            throw e; // FK/NOT NULL 등 다른 제약 위반은 그대로 전파
         }
 
         post.increaseLikeCount(); // @Version으로 lost update 방지
