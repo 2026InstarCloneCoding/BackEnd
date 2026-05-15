@@ -9,6 +9,9 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
   mail:
     host: smtp.gmail.com
@@ -18,3 +21,6 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:5173

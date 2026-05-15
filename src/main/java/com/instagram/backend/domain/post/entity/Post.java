@@ -29,6 +29,9 @@ public class Post extends BaseSoftDeleteEntity {
     @Column(name = "comment_enabled",nullable = false)
     private boolean commentEnabled = true;
 
+    @Version
+    private Long version;
+
     @Column(name = "like_count", nullable = false)
     private int likeCount = 0;
 
